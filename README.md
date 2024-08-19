@@ -1,4 +1,4 @@
-![Static Badge](https://img.shields.io/badge/version-1.23-1daacd?logo=go&logoColor=1daacd)
+![Static Badge](https://img.shields.io/badge/version-1.22-1daacd?logo=go&logoColor=1daacd)
 
 # Go Library
 Reusable go library that mostly implement standardization in the scope of BRISPOT Microservice.

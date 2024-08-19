@@ -1,10 +1,10 @@
 module github.com/brispot/go-lib
 
-go 1.23
+go 1.22
 
 require (
 	github.com/bytedance/sonic v1.12.1
-	github.com/goravel/framework v1.14.4
+	github.com/goravel/framework v1.14.2
 )
 
 require (
