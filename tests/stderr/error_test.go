@@ -1,0 +1,31 @@
+package stderr_test
+
+import (
+	"testing"
+
+	"github.com/brispot/go-lib/stderr"
+)
+
+func TestErr(t *testing.T) {
+	err := stderr.Err("77", "oops", 200)
+
+	// assert the code
+	if stderr.GetCode(err) != "77" {
+		t.Errorf("expect %s, got %s", "77", stderr.GetCode(err))
+	}
+	// assert the message
+	if stderr.GetMsg(err) != "oops" {
+		t.Errorf("expect %s, got %s", "oops", stderr.GetMsg(err))
+	}
+	// assert the http code
+	if stderr.GetHttpCode(err) != 200 {
+		t.Errorf("expect %d, got %d", 200, stderr.GetHttpCode(err))
+	}
+}
+
+func TestErr_Error(t *testing.T) {
+	err := stderr.Err("77", "oops", 200)
+	if err.Error() != "77 oops" {
+		t.Errorf("expect %s, got %s", "77 oops", err.Error())
+	}
+}
