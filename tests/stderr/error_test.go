@@ -29,3 +29,15 @@ func TestErr_Error(t *testing.T) {
 		t.Errorf("expect %s, got %s", "77 oops", err.Error())
 	}
 }
+
+func TestErr_IsErrNotFound(t *testing.T) {
+	err := stderr.ErrDataNotFound()
+	if !stderr.IsErrNotFound(err) {
+		t.Errorf("expect %v, got %v", true, stderr.IsErrNotFound(err))
+	}
+
+	err = stderr.ErrThirdParty()
+	if stderr.IsErrNotFound(err) {
+		t.Errorf("expect %v, got %v", false, stderr.IsErrNotFound(err))
+	}
+}
