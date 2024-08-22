@@ -3,6 +3,7 @@ package stderr
 import (
 	"errors"
 	"net/http"
+	"strings"
 )
 
 // err standard object that hold any information about the error.
@@ -10,19 +11,21 @@ type err struct {
 	httpCode int
 	code     string
 	msg      string
+	stackTrc string
 	metadata any
 }
 
 // Error implement error interface.
 func (e err) Error() string {
-	return e.code + " " + e.msg
+	// do trim space in case stacktrace empty so that there is no trailing empty space
+	return strings.TrimSpace(e.code + " " + e.msg + " " + e.stackTrc)
 }
 
 // Err set std error by given error code, message and any desired http code.
 //
 // Each value can be retrieved by helper func such as GetCode, GetMsg, GetMeta.
 func Err(code string, msg string, httpCode int) error {
-	return err{code: code, msg: msg, httpCode: httpCode}
+	return errWithDebug(code, msg, httpCode)
 }
 
 // ErrValidation error in validation, it's not recommended to be used directly.
@@ -32,7 +35,7 @@ func ErrValidation(msg string, validation []string) error {
 	if msg == "" {
 		msg = ERROR_DESC_PARAMETER
 	}
-	return err{code: ERROR_CODE_PARAMETER, msg: msg, metadata: validation, httpCode: http.StatusOK}
+	return errWithDebug(ERROR_CODE_PARAMETER, msg, http.StatusOK, validation...)
 }
 
 // ErrParam error in validation such as in the parameter input coming from
@@ -41,7 +44,7 @@ func ErrParam(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_PARAMETER)
 	}
-	return Err(ERROR_CODE_PARAMETER, msg[0], http.StatusOK)
+	return errWithDebug(ERROR_CODE_PARAMETER, msg[0], http.StatusOK)
 }
 
 // ErrNotFound error when the 'expected' data not found, this may exist in both
@@ -50,7 +53,7 @@ func ErrNotFound(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_DATA_NOT_FOUND)
 	}
-	return Err(ERROR_CODE_DATA_NOT_FOUND, msg[0], http.StatusOK)
+	return errWithDebug(ERROR_CODE_DATA_NOT_FOUND, msg[0], http.StatusOK)
 }
 
 // ErrPermission error permission denied, this may commonly be used in brispot
@@ -62,7 +65,7 @@ func ErrPermission(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_PERMISSION)
 	}
-	return Err(ERROR_CODE_ACCESS_PERMISSION, msg[0], http.StatusForbidden)
+	return errWithDebug(ERROR_CODE_ACCESS_PERMISSION, msg[0], http.StatusForbidden)
 }
 
 // ErrInvHeader error invalid header, this may commonly be used in brispot
@@ -73,7 +76,7 @@ func ErrInvHeader(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_INVALID_HEADER)
 	}
-	return Err(ERROR_CODE_INVALID_HEADER, msg[0], http.StatusBadRequest)
+	return errWithDebug(ERROR_CODE_INVALID_HEADER, msg[0], http.StatusBadRequest)
 }
 
 // ErrInvRule any process that does not meet with the requirement set in the
@@ -82,7 +85,7 @@ func ErrInvRule(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_INVALID_RULE)
 	}
-	return Err(ERROR_CODE_INVALID_RULE, msg[0], http.StatusOK)
+	return errWithDebug(ERROR_CODE_INVALID_RULE, msg[0], http.StatusOK)
 }
 
 // ErrThirdParty error triggered by surrounding service. It's up to developer
@@ -92,7 +95,7 @@ func ErrThirdParty(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_THIRD_PARTY)
 	}
-	return Err(ERROR_CODE_THIRD_PARTY, msg[0], http.StatusOK)
+	return errWithDebug(ERROR_CODE_THIRD_PARTY, msg[0], http.StatusOK)
 }
 
 // ErrWaiting error when there is still process occurring in the background.
@@ -100,7 +103,7 @@ func ErrWaiting(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_WAITING_STATUS)
 	}
-	return Err(ERROR_CODE_WAITING_STATUS, msg[0], http.StatusOK)
+	return errWithDebug(ERROR_CODE_WAITING_STATUS, msg[0], http.StatusOK)
 }
 
 // ErrUnsupported error when the incoming request can not be supported.
@@ -110,7 +113,7 @@ func ErrUnsupported(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_UNSUPPORTED)
 	}
-	return Err(ERROR_CODE_UNSUPPORTED, msg[0], http.StatusOK)
+	return errWithDebug(ERROR_CODE_UNSUPPORTED, msg[0], http.StatusOK)
 }
 
 // ErrRuntime unexpected error that may occur in the runtime.
@@ -120,12 +123,13 @@ func ErrRuntime(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_SYSTEM)
 	}
-	return Err(ERROR_CODE_SYSTEM, msg[0], http.StatusOK)
+	return errWithDebug(ERROR_CODE_SYSTEM, msg[0], http.StatusOK)
 }
 
-// ErrDataNotFound error ErrNotFound with message 'data tidak ditemukan'.
+// ErrDataNotFound error similar with ErrNotFound but use message 'data tidak
+// ditemukan'.
 func ErrDataNotFound() error {
-	return ErrNotFound("data tidak ditemukan")
+	return errWithDebug(ERROR_CODE_DATA_NOT_FOUND, "data tidak ditemukan", http.StatusOK)
 }
 
 // IsErrNotFound return true if the given error is created using ErrNotFound
@@ -182,6 +186,16 @@ func GetMeta(e error) any {
 		return stdErr.metadata
 	}
 	return nil
+}
+
+// GetStackTrace get the error stack trace if the given error if it's error
+// coming from this pkg, otherwise will return the default ERROR_DESC_SYSTEM.
+func GetStackTrace(e error) string {
+	var stdErr err
+	if errors.As(e, &stdErr) {
+		return stdErr.stackTrc
+	}
+	return ERROR_DESC_SYSTEM
 }
 
 // GetValidationErrorMsg return the validation message injected in

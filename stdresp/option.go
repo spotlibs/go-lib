@@ -1,6 +1,10 @@
 package stdresp
 
-import "github.com/brispot/go-lib/stderr"
+import (
+	"strings"
+
+	"github.com/brispot/go-lib/stderr"
+)
 
 // StdOpt option signature that accept and modify Std response object.
 type StdOpt func(std *Std)
@@ -30,7 +34,9 @@ func WithErr(e error) StdOpt {
 		if stderr.IsStdError(e) {
 			// override the code and description
 			s.ResponseCode = stderr.GetCode(e)
-			s.ResponseDesc = stderr.GetMsg(e)
+
+			// do trim space in case stacktrace is empty
+			s.ResponseDesc = strings.TrimSpace(stderr.GetMsg(e) + " " + stderr.GetStackTrace(e))
 
 			// also if any, get the validation message too
 			s.ResponseValidation = stderr.GetValidationErrorMsg(e)
