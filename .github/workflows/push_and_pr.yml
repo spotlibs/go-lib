@@ -3,10 +3,12 @@ name: Continuous Integration
 on:
   push:
     branches:
-      - '*release*'
+      - '**'        # matches every branch
+      - '!master'   # excludes master
   pull_request:
     branches:
-      - '*release*'
+      - '**'        # matches every branch
+      - '!master'   # excludes master
 
 jobs:
   ci:
