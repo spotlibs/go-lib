@@ -2,6 +2,7 @@ on: workflow_call
 
 jobs:
   build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,3 +14,18 @@ jobs:
 
       - name: Test
         run: go test -v ./...
+
+  golangci:
+    name: Run Linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.23
+
+      - name: Linter
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.60.3
