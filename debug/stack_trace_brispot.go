@@ -28,29 +28,32 @@ func GetStackTraceInString(pick ...int) string {
 	stack := make([]uintptr, 2<<6)      // 128
 	length := runtime.Callers(3, stack) // skip the first 3 frames
 
+	var pickAll bool
 	// set default to capture the first found line
 	if len(pick) < 1 {
-		pick[0] = 1
+		pickAll = true
 	}
 
 	trackPicked := 1
+	var allStackTrace strings.Builder
 	for i := 0; i < length; i++ {
 		funcPtr := runtime.FuncForPC(stack[i])
 		file, line := funcPtr.FileLine(stack[i])
 		if strings.Contains(file, "/app/") {
 
 			// capture the matched pick
-			if trackPicked == pick[0] {
+			if !pickAll && trackPicked == pick[0] {
 				s := fmt.Sprintf("%s:%d %s\n", file, line, funcPtr.Name())
 				return s
-				//println(i, ": ", s)
-				//println("")
 			}
+
+			s := fmt.Sprintf("%s:%d %s \n", file, line, funcPtr.Name())
+			allStackTrace.WriteString(s)
 
 			trackPicked++
 
 		}
 	}
 
-	return ""
+	return allStackTrace.String()
 }
