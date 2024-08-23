@@ -1,10 +1,6 @@
 name: Continuous Integration
 
 on:
-  push:
-    branches:
-      - '**'        # matches every branch
-      - '!master'   # excludes master
   pull_request:
     branches:
       - '**'        # matches every branch
