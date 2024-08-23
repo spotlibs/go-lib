@@ -1,6 +1,9 @@
 name: Continuous Integration
 
 on:
+  push:
+    branches:
+      - 'beta/release-v1' # as long as stable release not rolled out yet, this branch should be used as development
   pull_request:
     branches:
       - '**'        # matches every branch
