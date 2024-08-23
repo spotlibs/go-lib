@@ -24,7 +24,7 @@ func Recover(c http.Context) {
 			}
 
 			err := stderr.Err(stderr.ERROR_CODE_SYSTEM, prefixMsg+suffixMsg, http.StatusOK)
-			stdresp.Error(c, stdresp.WithErr(err)).Render()
+			_ = stdresp.Error(c, stdresp.WithErr(err)).Render()
 		}
 	}()
 
