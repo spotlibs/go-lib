@@ -7,3 +7,4 @@ Currently, pkg that are already considered has stable API are
 - `stderr`: standard interface for any error that may occur in the BRISPOT Microservice
 - `stdresp`: standard interface to construct standard response
 - `validation`: helper to validate request for `Goravel` framework
+- `debug`: capture stack trace
