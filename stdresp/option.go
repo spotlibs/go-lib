@@ -3,7 +3,7 @@ package stdresp
 import (
 	"strings"
 
-	"github.com/brispot/go-lib/stderr"
+	"github.com/spotlibs/go-lib/stderr"
 )
 
 // StdOpt option signature that accept and modify Std response object.

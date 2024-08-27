@@ -1,8 +1,8 @@
 package stdresp
 
 import (
-	"github.com/brispot/go-lib/stderr"
 	"github.com/goravel/framework/contracts/http"
+	"github.com/spotlibs/go-lib/stderr"
 )
 
 // Std holds standard response structure for brispot microservice.

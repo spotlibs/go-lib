@@ -1,10 +1,10 @@
 package validation
 
 import (
-	"github.com/brispot/go-lib/stderr"
 	"github.com/bytedance/sonic"
 	"github.com/goravel/framework/facades"
 	"github.com/goravel/framework/validation"
+	"github.com/spotlibs/go-lib/stderr"
 )
 
 // ValidateRequest validate request data with given rules.

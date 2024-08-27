@@ -3,7 +3,7 @@ package stderr
 import (
 	"sync/atomic"
 
-	"github.com/brispot/go-lib/debug"
+	"github.com/spotlibs/go-lib/debug"
 )
 
 // debugDepthLevel hold the state the depth level of line captured in the debug.
