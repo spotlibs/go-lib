@@ -1,4 +1,4 @@
-module github.com/brispot/go-lib
+module github.com/spotlibs/go-lib
 
 go 1.22
 
