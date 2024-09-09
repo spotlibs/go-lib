@@ -56,11 +56,11 @@ func ErrNotFound(msg ...string) error {
 	return errWithDebug(ERROR_CODE_DATA_NOT_FOUND, msg[0], http.StatusOK)
 }
 
-// ErrPermission error permission denied, this may commonly be used in brispot
+// ErrPermission error permission denied, this may commonly be used in api
 // gateway, or any other middleware that need to return non-200 http status
 // code.
 //
-// This error will set the response http code to 403 via stderr.WithErr.
+// This error will set the response http code to 403 via stdresp.WithErr.
 func ErrPermission(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_PERMISSION)
@@ -68,10 +68,10 @@ func ErrPermission(msg ...string) error {
 	return errWithDebug(ERROR_CODE_ACCESS_PERMISSION, msg[0], http.StatusForbidden)
 }
 
-// ErrInvHeader error invalid header, this may commonly be used in brispot
+// ErrInvHeader error invalid header, this may commonly be used in spotlibs
 // gateway.
 //
-// This error will set the response http code to 400 via stderr.WithErr.
+// This error will set the response http code to 400 via stdresp.WithErr.
 func ErrInvHeader(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_INVALID_HEADER)
