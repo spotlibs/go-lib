@@ -1,6 +1,15 @@
 package ctx
 
-import "github.com/goravel/framework/contracts/http"
+import (
+	"context"
+
+	"github.com/goravel/framework/contracts/http"
+)
+
+// keyMetadata custom type that can prevent collision.
+type keyMetadata int
+
+const keyMetadataCtx keyMetadata = iota
 
 // metadataKey key to identify that a value in context is set and get from this
 // package.
@@ -29,6 +38,25 @@ type Metadata struct {
 	ReqKodeRegion   string
 	PathGateway     string
 	ApiKey          string
+}
+
+// Set inject given Metadata to context with custom key to make sure that the
+// value is correct.
+func Set(ctx context.Context, mt Metadata) context.Context {
+	return context.WithValue(ctx, keyMetadataCtx, mt)
+}
+
+// Get retrieve Metadata from given context with key from this pkg.
+func Get(ctx context.Context) Metadata {
+	if mt, ok := ctx.Value(keyMetadataCtx).(Metadata); ok {
+		return mt
+	}
+	return Metadata{}
+}
+
+// PassToContext pass Metadata from http.Context to context.
+func PassToContext(c http.Context) context.Context {
+	return Set(c, ParseRequest(c))
 }
 
 // ParseRequest return Metadata from given http context but return empty data
@@ -70,8 +98,8 @@ func SetFromRequestHeader(c http.Context) {
 	c.WithValue(metadataKey, mt)
 }
 
-// GetReqId shortcut of ParseRequest with ReqId to get request id from given
-// http context.
-func GetReqId(c http.Context) string {
-	return ParseRequest(c).ReqId
+// GetReqId extract request id from given context. This is a shortcut for Get
+// with ReqId to get the request id from given context.
+func GetReqId(c context.Context) string {
+	return Get(c).ReqId
 }
