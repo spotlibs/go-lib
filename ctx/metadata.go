@@ -98,8 +98,8 @@ func SetFromRequestHeader(c http.Context) {
 	c.WithValue(metadataKey, mt)
 }
 
-// GetReqId shortcut of ParseRequest with ReqId to get request id from given
-// http context.
-func GetReqId(c http.Context) string {
-	return ParseRequest(c).ReqId
+// GetReqId extract request id from given context. This is a shortcut for Get
+// with ReqId to get the request id from given context.
+func GetReqId(c context.Context) string {
+	return Get(c).ReqId
 }
