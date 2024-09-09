@@ -1,6 +1,15 @@
 package ctx
 
-import "github.com/goravel/framework/contracts/http"
+import (
+	"context"
+
+	"github.com/goravel/framework/contracts/http"
+)
+
+// keyMetadata custom type that can prevent collision.
+type keyMetadata int
+
+const keyMetadataCtx keyMetadata = iota
 
 // metadataKey key to identify that a value in context is set and get from this
 // package.
@@ -29,6 +38,25 @@ type Metadata struct {
 	ReqKodeRegion   string
 	PathGateway     string
 	ApiKey          string
+}
+
+// Set inject given Metadata to context with custom key to make sure that the
+// value is correct.
+func Set(ctx context.Context, mt Metadata) context.Context {
+	return context.WithValue(ctx, keyMetadataCtx, mt)
+}
+
+// Get retrieve Metadata from given context with key from this pkg.
+func Get(ctx context.Context) Metadata {
+	if mt, ok := ctx.Value(keyMetadataCtx).(Metadata); ok {
+		return mt
+	}
+	return Metadata{}
+}
+
+// PassToContext pass Metadata from http.Context to context.
+func PassToContext(c http.Context) context.Context {
+	return Set(c, ParseRequest(c))
 }
 
 // ParseRequest return Metadata from given http context but return empty data
