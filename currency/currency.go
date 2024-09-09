@@ -12,7 +12,7 @@ var (
 	scales = []string{"", "ribu", "juta", "miliar"} // Add more scales if needed (e.g., triliun)
 )
 
-// Helper function to convert numbers below 1000 in Indonesian
+// convertHundreds is helper function to convert numbers below 1000 in Indonesian
 func convertHundreds(n int) string {
 	if n == 0 {
 		return ""
@@ -48,7 +48,7 @@ func convertHundreds(n int) string {
 	return result
 }
 
-// Main function to convert any integer to words in Indonesian
+// doIntToWordsIndonesian is main helper function to convert any integer to words in Indonesian
 func doIntToWordsIndonesian(n int) string {
 	if n == 0 {
 		return "nol"
@@ -85,6 +85,8 @@ func doIntToWordsIndonesian(n int) string {
 	return strings.TrimSpace(result)
 }
 
+// IntToWordsIndonesian is function to convert integer form currency to words spelling
+// example : 1001 -> seribu satu
 func IntToWordsIndonesian(n int) string {
 	return doIntToWordsIndonesian(n)
 }
