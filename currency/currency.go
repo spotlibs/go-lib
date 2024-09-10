@@ -6,10 +6,10 @@ import (
 
 // Define maps for number words in Indonesian
 var (
-	units  = []string{"", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan"}
-	teens  = []string{"sepuluh", "sebelas", "dua belas", "tiga belas", "empat belas", "lima belas", "enam belas", "tujuh belas", "delapan belas", "sembilan belas"}
-	tens   = []string{"", "", "dua puluh", "tiga puluh", "empat puluh", "lima puluh", "enam puluh", "tujuh puluh", "delapan puluh", "sembilan puluh"}
-	scales = []string{"", "ribu", "juta", "miliar"} // Add more scales if needed (e.g., triliun)
+	units  = [10]string{"", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan"}
+	teens  = [10]string{"sepuluh", "sebelas", "dua belas", "tiga belas", "empat belas", "lima belas", "enam belas", "tujuh belas", "delapan belas", "sembilan belas"}
+	tens   = [13]string{"", "", "dua puluh", "tiga puluh", "empat puluh", "lima puluh", "enam puluh", "tujuh puluh", "delapan puluh", "sembilan puluh"}
+	scales = [4]string{"", "ribu", "juta", "miliar"} // Add more scales if needed (e.g., triliun)
 )
 
 // convertHundreds is helper function to convert numbers below 1000 in Indonesian
