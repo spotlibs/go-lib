@@ -1,6 +1,8 @@
 package currency
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -89,4 +91,37 @@ func doIntToWordsIndonesian(n int) string {
 // example : 1001 -> seribu satu
 func IntToWordsIndonesian(n int) string {
 	return doIntToWordsIndonesian(n)
+}
+
+// decimalToWordsIndonesian is helper function to convert the decimal part of a float to words in Indonesian
+func decimalToWordsIndonesian(decimalPart string) string {
+	result := ""
+	for _, digit := range decimalPart {
+		num, _ := strconv.Atoi(string(digit))
+		result += units[num] + " "
+	}
+	return strings.TrimSpace(result)
+}
+
+// doFloatToWordsIndonesian is main function to convert any float to words in Indonesian
+func doFloatToWordsIndonesian(f float64) string {
+	// Split into integer and decimal parts
+	parts := strings.Split(fmt.Sprintf("%.10g", f), ".")
+	integerPart, _ := strconv.Atoi(parts[0])
+	integerWords := doIntToWordsIndonesian(integerPart)
+
+	// If there is a decimal part, convert it
+	if len(parts) > 1 {
+		decimalWords := decimalToWordsIndonesian(parts[1])
+		return integerWords + " koma " + decimalWords
+	}
+
+	// If no decimal part, return just the integer words
+	return integerWords
+}
+
+// FloatToWordsIndonesian is a function to convert float to words in Indonesian
+// example 123.45 -> "seratus dua puluh tiga koma empat lima"
+func FloatToWordsIndonesian(f float64) string {
+	return doFloatToWordsIndonesian(f)
 }
