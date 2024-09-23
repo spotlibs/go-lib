@@ -18,7 +18,7 @@ type wrkLogger struct {
 	reqId string
 }
 
-func (l wrkLogger) Info(m M) {
+func (l wrkLogger) Info(m Map) {
 	if !isOff.Load() {
 		// add request id
 		m["request-id"] = l.reqId

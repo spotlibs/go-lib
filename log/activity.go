@@ -15,7 +15,7 @@ var (
 
 type actLogger struct{}
 
-func (l actLogger) Info(m M) {
+func (l actLogger) Info(m Map) {
 	if !isOff.Load() {
 		actZapLog.Info("", zap.Any("payload", m))
 	}

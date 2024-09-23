@@ -18,21 +18,21 @@ type runLogger struct {
 	reqId string
 }
 
-func (l runLogger) Info(m M) {
+func (l runLogger) Info(m Map) {
 	if !isOff.Load() {
 		// add request id
 		m["request-id"] = l.reqId
 		runZapLog.Info("", zap.Any("payload", m))
 	}
 }
-func (l runLogger) Warning(m M) {
+func (l runLogger) Warning(m Map) {
 	if !isOff.Load() {
 		// add request id
 		m["request-id"] = l.reqId
 		runZapLog.Warn("", zap.Any("payload", m))
 	}
 }
-func (l runLogger) Error(m M) {
+func (l runLogger) Error(m Map) {
 	if !isOff.Load() {
 		// add request id
 		m["request-id"] = l.reqId
