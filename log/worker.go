@@ -48,8 +48,7 @@ func Worker(c context.Context) WorkLogger {
 
 	// - Start embedding any necessary metadata from context
 
-	var reqId string
-	reqId = ctx.GetReqId(c)
+	reqId := ctx.GetReqId(c)
 	// add any other metadata here
 
 	// - End embedding any necessary metadata from context
