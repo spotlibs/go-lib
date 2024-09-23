@@ -9,6 +9,7 @@ import (
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 	"github.com/spotlibs/go-lib/ctx"
+	"github.com/spotlibs/go-lib/log"
 )
 
 // ActivityMonitor capture and log all request/response.
@@ -58,9 +59,8 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 		"requestAt":    start.Format(time.RFC3339Nano),
 		//"memoryUsage":  // coming soon
 	}
-	st, _ := sonic.ConfigFastest.MarshalToString(activityData)
-	// currently only log to stdout
-	println(st)
+
+	log.Activity(c).Info(activityData)
 }
 
 // captureRequestMap capture request as map and transform it to json string.
