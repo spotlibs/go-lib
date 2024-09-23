@@ -36,12 +36,6 @@ type Metadata struct {
 	ApiKey          string
 }
 
-// Set inject given Metadata to context with custom key to make sure that the
-// value is correct.
-func Set(ctx context.Context, mt Metadata) context.Context {
-	return context.WithValue(ctx, keyCtx, mt)
-}
-
 // Get retrieve Metadata from given context with key from this pkg.
 func Get(ctx context.Context) Metadata {
 	if mt, ok := ctx.Value(keyCtx).(Metadata); ok {
