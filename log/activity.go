@@ -22,7 +22,7 @@ func (l actLogger) Info(m Map) {
 }
 
 // Activity start ActLogger.
-func Activity(c ...context.Context) ActLogger {
+func Activity(_ context.Context) ActLogger {
 	actOnce.Do(func() {
 		// setup log writer
 		actLogWriter := &writer{wr: setupLog("activity")}

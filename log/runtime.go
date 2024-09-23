@@ -41,7 +41,12 @@ func (l runLogger) Error(m Map) {
 }
 
 // Runtime start RunLogger.
-func Runtime(c ...context.Context) RunLogger {
+func Runtime(c context.Context) RunLogger {
+	// prevent panic
+	if c == nil {
+		c = context.Background()
+	}
+
 	runOnce.Do(func() {
 		// setup log writer
 		runLogWriter := &writer{wr: setupLog("runtime")}
@@ -58,11 +63,8 @@ func Runtime(c ...context.Context) RunLogger {
 	// - Start embedding any necessary metadata from context
 
 	var reqId string
-	if len(c) > 0 {
-		reqId = ctx.GetReqId(c[0])
-
-		// add any other metadata here
-	}
+	reqId = ctx.GetReqId(c)
+	// add any other metadata here
 
 	// - End embedding any necessary metadata from context
 
