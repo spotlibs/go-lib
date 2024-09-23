@@ -18,7 +18,7 @@ type wrkLogger struct {
 	reqId string
 }
 
-func (l wrkLogger) Info(m M) {
+func (l wrkLogger) Info(m Map) {
 	if !isOff.Load() {
 		// add request id
 		m["request-id"] = l.reqId
@@ -27,7 +27,12 @@ func (l wrkLogger) Info(m M) {
 }
 
 // Worker start WorkLogger.
-func Worker(c ...context.Context) WorkLogger {
+func Worker(c context.Context) WorkLogger {
+	// prevent panic
+	if c == nil {
+		c = context.Background()
+	}
+
 	wrkOnce.Do(func() {
 		// setup log writer
 		wrkLogWriter := &writer{wr: setupLog("worker")}
@@ -43,12 +48,8 @@ func Worker(c ...context.Context) WorkLogger {
 
 	// - Start embedding any necessary metadata from context
 
-	var reqId string
-	if len(c) > 0 {
-		reqId = ctx.GetReqId(c[0])
-
-		// add any other metadata here
-	}
+	reqId := ctx.GetReqId(c)
+	// add any other metadata here
 
 	// - End embedding any necessary metadata from context
 

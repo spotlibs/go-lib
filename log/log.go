@@ -54,7 +54,7 @@ type writer struct {
 
 func (w *writer) Write(p []byte) (n int, err error) {
 	// format incoming message from zap then pass it to the real writer
-	var m, mm M
+	var m, mm Map
 	_ = sonic.ConfigStd.Unmarshal(p, &m)
 	// try grab level from the payload of zap log message
 	var lvl string
@@ -79,7 +79,7 @@ func (w *writer) Close() error { return w.wr.Close() }
 // used inside middleware.
 type ActLogger interface {
 	// Info log given payload in INFO level.
-	Info(M)
+	Info(Map)
 }
 
 // WorkLogger worker logger and can be accessed with Worker.
@@ -87,7 +87,7 @@ type ActLogger interface {
 // This logger may only be used in worker or job process.
 type WorkLogger interface {
 	// Info log given payload in INFO level.
-	Info(M)
+	Info(Map)
 }
 
 // RunLogger runtime logger and can be accessed with Runtime.
@@ -96,15 +96,15 @@ type WorkLogger interface {
 // in almost anywhere in the system.
 type RunLogger interface {
 	// Info log given payload in INFO level.
-	Info(M)
+	Info(Map)
 	// Warning log given payload in WARNING level.
-	Warning(M)
+	Warning(Map)
 	// Error log given payload in ERROR level.
-	Error(M)
+	Error(Map)
 }
 
-// M construct map data structure with string as the key type.
-type M map[string]any
+// Map construct map data structure with string as the key type.
+type Map map[string]any
 
 // setupLog do setup and return io.WriteCloser that ready to use as target
 // output of logs.
@@ -141,7 +141,7 @@ func createOrOpenFile(logPath string) io.WriteCloser {
 }
 
 // formatMsg format log message based on the level string and M as the payload.
-func formatMsg(t, lvl string, m M) string {
+func formatMsg(t, lvl string, m Map) string {
 	payload, _ := sonic.ConfigStd.MarshalToString(m)
 	return fmt.Sprintf("[%s] ::%s.%s.%s:: %s\n", t, os.Getenv("APP_NAME"), os.Getenv("APP_ENV"), lvl, payload)
 }

@@ -15,14 +15,14 @@ var (
 
 type actLogger struct{}
 
-func (l actLogger) Info(m M) {
+func (l actLogger) Info(m Map) {
 	if !isOff.Load() {
 		actZapLog.Info("", zap.Any("payload", m))
 	}
 }
 
 // Activity start ActLogger.
-func Activity(c ...context.Context) ActLogger {
+func Activity(_ context.Context) ActLogger {
 	actOnce.Do(func() {
 		// setup log writer
 		actLogWriter := &writer{wr: setupLog("activity")}

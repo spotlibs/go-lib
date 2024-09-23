@@ -18,21 +18,21 @@ type runLogger struct {
 	reqId string
 }
 
-func (l runLogger) Info(m M) {
+func (l runLogger) Info(m Map) {
 	if !isOff.Load() {
 		// add request id
 		m["request-id"] = l.reqId
 		runZapLog.Info("", zap.Any("payload", m))
 	}
 }
-func (l runLogger) Warning(m M) {
+func (l runLogger) Warning(m Map) {
 	if !isOff.Load() {
 		// add request id
 		m["request-id"] = l.reqId
 		runZapLog.Warn("", zap.Any("payload", m))
 	}
 }
-func (l runLogger) Error(m M) {
+func (l runLogger) Error(m Map) {
 	if !isOff.Load() {
 		// add request id
 		m["request-id"] = l.reqId
@@ -41,7 +41,12 @@ func (l runLogger) Error(m M) {
 }
 
 // Runtime start RunLogger.
-func Runtime(c ...context.Context) RunLogger {
+func Runtime(c context.Context) RunLogger {
+	// prevent panic
+	if c == nil {
+		c = context.Background()
+	}
+
 	runOnce.Do(func() {
 		// setup log writer
 		runLogWriter := &writer{wr: setupLog("runtime")}
@@ -57,12 +62,8 @@ func Runtime(c ...context.Context) RunLogger {
 
 	// - Start embedding any necessary metadata from context
 
-	var reqId string
-	if len(c) > 0 {
-		reqId = ctx.GetReqId(c[0])
-
-		// add any other metadata here
-	}
+	reqId := ctx.GetReqId(c)
+	// add any other metadata here
 
 	// - End embedding any necessary metadata from context
 
