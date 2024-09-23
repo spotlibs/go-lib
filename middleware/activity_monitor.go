@@ -37,7 +37,7 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 	_ = sonic.ConfigFastest.Unmarshal(c.Response().Origin().Body().Bytes(), &res)
 
 	// get metadata from context
-	mt := ctx.ParseRequest(c)
+	mt := ctx.Get(c)
 
 	activityData := map[string]any{
 		"app_name":     facades.Config().GetString("app.name", "Microservice"),

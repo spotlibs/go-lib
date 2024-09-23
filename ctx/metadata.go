@@ -7,13 +7,9 @@ import (
 )
 
 // keyMetadata custom type that can prevent collision.
-type keyMetadata int
+type keyMetadata struct{}
 
-const keyMetadataCtx keyMetadata = iota
-
-// metadataKey key to identify that a value in context is set and get from this
-// package.
-const metadataKey = "spotlibs-metadata-key"
+var keyCtx keyMetadata
 
 // Metadata holds any request-scoped shared data within brispot microservice.
 type Metadata struct {
@@ -43,30 +39,15 @@ type Metadata struct {
 // Set inject given Metadata to context with custom key to make sure that the
 // value is correct.
 func Set(ctx context.Context, mt Metadata) context.Context {
-	return context.WithValue(ctx, keyMetadataCtx, mt)
+	return context.WithValue(ctx, keyCtx, mt)
 }
 
 // Get retrieve Metadata from given context with key from this pkg.
 func Get(ctx context.Context) Metadata {
-	if mt, ok := ctx.Value(keyMetadataCtx).(Metadata); ok {
+	if mt, ok := ctx.Value(keyCtx).(Metadata); ok {
 		return mt
 	}
 	return Metadata{}
-}
-
-// PassToContext pass Metadata from http.Context to context.
-func PassToContext(c http.Context) context.Context {
-	return Set(c, ParseRequest(c))
-}
-
-// ParseRequest return Metadata from given http context but return empty data
-// instead if no data were found.
-func ParseRequest(c http.Context) Metadata {
-	mt, ok := c.Value(metadataKey).(Metadata)
-	if !ok {
-		mt = Metadata{}
-	}
-	return mt
 }
 
 // SetFromRequestHeader set any available metadata from given http context in
@@ -95,7 +76,7 @@ func SetFromRequestHeader(c http.Context) {
 		ReqJenisUker:    c.Request().Header("X-Request-Jenis-Uker"),
 		PathGateway:     c.Request().Header("X-Path-Gateway"),
 	}
-	c.WithValue(metadataKey, mt)
+	c.WithValue(keyCtx, mt)
 }
 
 // GetReqId extract request id from given context. This is a shortcut for Get
