@@ -104,3 +104,17 @@ func hasPrefix(s string, prefix ...string) bool {
 		return strings.HasPrefix(s, pre)
 	})
 }
+
+// sniffMIMEType return the mime-type from given FileHeader instance by using
+// helper provided by Goravel.
+func sniffMIMEType(f *multipart.FileHeader) string {
+	fl, err := filesystem.NewFileFromRequest(f)
+	if err != nil {
+		return "ERR-" + err.Error()
+	}
+	mt, err := fl.MimeType()
+	if err != nil {
+		return "ERR-" + err.Error()
+	}
+	return mt
+}
