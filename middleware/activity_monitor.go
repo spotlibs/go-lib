@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"mime/multipart"
 	"slices"
 	"strings"
 	"time"
@@ -8,9 +9,17 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
+	"github.com/goravel/framework/filesystem"
 	"github.com/spotlibs/go-lib/ctx"
 	"github.com/spotlibs/go-lib/log"
 )
+
+// formDataFile holds information of each binary file in multipart form-data.
+type formDataFile struct {
+	Filename string `json:"filename"`
+	Mimetype string `json:"mimetype"`
+	Size     int    `json:"size"`
+}
 
 // ActivityMonitor capture and log all request/response.
 func ActivityMonitor(c http.Context) {
@@ -69,30 +78,32 @@ func captureRequestMap(c http.Context) any {
 }
 
 // captureRequestMultipart capture request multipart data and only get
-// the information of that file such as the filename, size and extension.
+// the information of each file such as the filename, size and extension.
+// Include key-val form data but only pick the first value for each key.
 func captureRequestMultipart(c http.Context) any {
 	reqOrg := c.Request().Origin()
 	_ = reqOrg.ParseMultipartForm(2 << 9) // 1024
 
-	var bagOfForm []map[string]any
+	bagOfForm := make(map[string]any)
 	// grab any available form-value
 	for k, v := range reqOrg.MultipartForm.Value {
-		bagOfForm = append(bagOfForm, map[string]any{
-			"field": k,
-			"value": v,
-		})
+		if len(v) > 0 {
+			bagOfForm[k] = v[0] // only pick the first data
+		}
 	}
 	// grab any available files
 	for field, header := range reqOrg.MultipartForm.File {
+		var bagFormFiles []formDataFile
 		for _, headerFile := range header {
 			if headerFile != nil {
-				bagOfForm = append(bagOfForm, map[string]any{
-					"field":    field,
-					"filename": headerFile.Filename,
-					"size":     int(headerFile.Size),
+				bagFormFiles = append(bagFormFiles, formDataFile{
+					Filename: headerFile.Filename,
+					Size:     int(headerFile.Size),
+					Mimetype: sniffMIMEType(headerFile),
 				})
 			}
 		}
+		bagOfForm[field] = bagFormFiles
 	}
 
 	return bagOfForm
@@ -103,4 +114,18 @@ func hasPrefix(s string, prefix ...string) bool {
 	return slices.ContainsFunc(prefix, func(pre string) bool {
 		return strings.HasPrefix(s, pre)
 	})
+}
+
+// sniffMIMEType return the mime-type from given FileHeader instance by using
+// helper provided by Goravel.
+func sniffMIMEType(f *multipart.FileHeader) string {
+	fl, err := filesystem.NewFileFromRequest(f)
+	if err != nil {
+		return "ERR-" + err.Error()
+	}
+	mt, err := fl.MimeType()
+	if err != nil {
+		return "ERR-" + err.Error()
+	}
+	return mt
 }
