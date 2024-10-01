@@ -44,7 +44,9 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 
 	// transform back response to an object before capturing
 	var res map[string]any
-	_ = sonic.ConfigFastest.Unmarshal(c.Response().Origin().Body().Bytes(), &res)
+	if v := c.Response().Origin().Body(); v != nil {
+		_ = sonic.ConfigFastest.Unmarshal(v.Bytes(), &res)
+	}
 
 	// get metadata from context
 	mt := ctx.Get(c)
