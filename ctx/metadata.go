@@ -34,6 +34,8 @@ type Metadata struct {
 	ReqKodeRegion   string
 	PathGateway     string
 	ApiKey          string
+	UrlPath         string // UrlPath may contain the url path information coming from http request
+	SignaturePath   string // SignaturePath may contain the signature command from artisan command
 }
 
 // Get retrieve Metadata from given context with key from this pkg.
@@ -69,6 +71,7 @@ func SetFromRequestHeader(c http.Context) {
 		ReqKodeRegion:   c.Request().Header("X-Request-Kode-Region"),
 		ReqJenisUker:    c.Request().Header("X-Request-Jenis-Uker"),
 		PathGateway:     c.Request().Header("X-Path-Gateway"),
+		UrlPath:         c.Request().Path(),
 	}
 	c.WithValue(keyCtx, mt)
 }

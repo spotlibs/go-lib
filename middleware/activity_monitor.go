@@ -12,7 +12,10 @@ import (
 	"github.com/goravel/framework/filesystem"
 	"github.com/spotlibs/go-lib/ctx"
 	"github.com/spotlibs/go-lib/log"
+	"github.com/spotlibs/go-lib/stdresp"
 )
+
+const msgExceedLimit = "More than 5000 character"
 
 // formDataFile holds information of each binary file in multipart form-data.
 type formDataFile struct {
@@ -41,11 +44,9 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 	default:
 		req = captureRequestMap(c) // treat any unhandled content-type as map
 	}
-
-	// transform back response to an object before capturing
-	var res map[string]any
-	if v := c.Response().Origin().Body(); v != nil {
-		_ = sonic.ConfigFastest.Unmarshal(v.Bytes(), &res)
+	// replace request if the len more than the limit 5000
+	if checkLength(req) > 5000 {
+		req = msgExceedLimit
 	}
 
 	// get metadata from context
@@ -64,7 +65,7 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 		"deviceID":     mt.DeviceId,
 		"requestTags":  mt.ReqTags,
 		"requestBody":  req,
-		"responseBody": res,
+		"responseBody": captureResponse(c),
 		"responseTime": time.Since(start).Milliseconds(),
 		"httpCode":     c.Response().Origin().Status(),
 		"requestAt":    start.Format(time.RFC3339Nano),
@@ -72,6 +73,48 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 	}
 
 	log.Activity(c).Info(activityData)
+}
+
+// captureResponse capture the response body if meet the criteria and requirement.
+func captureResponse(c http.Context) any {
+	// transform back response to an object before capturing
+	var res stdresp.Std
+	if v := c.Response().Origin().Body(); v != nil {
+		_ = sonic.ConfigFastest.Unmarshal(v.Bytes(), &res)
+
+		// replace data if its len more than the limit 5000
+		if checkLength(res.ResponseData) > 5000 {
+			res.ResponseData = msgExceedLimit
+		}
+	}
+	return res
+}
+
+func checkLength(val any) int {
+	if val != nil {
+		return 0
+	}
+
+	switch v := val.(type) {
+	case string:
+		return len(v)
+	case int:
+		return v
+	case []int:
+		return len(v)
+	case []string:
+		return len(v)
+	case map[string]int:
+		return len(v)
+	case map[string]any:
+		return len(v)
+	case map[string]string:
+		return len(v)
+	case []any:
+		return len(v)
+	default:
+		return 0
+	}
 }
 
 // captureRequestMap capture request as map and transform it to json string.

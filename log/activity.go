@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/spotlibs/go-lib/ctx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -13,16 +14,21 @@ var (
 	actZapLog *zap.Logger // actZapLog use zap log to log message, to benefit from its buffer.
 )
 
-type actLogger struct{}
+type actLogger struct {
+	trcId      string
+	identifier string
+}
 
 func (l actLogger) Info(m Map) {
 	if !isOff.Load() {
+		m["trace-id"] = l.trcId
+		m["identifier"] = l.identifier
 		actZapLog.Info("", zap.Any("payload", m))
 	}
 }
 
 // Activity start ActLogger.
-func Activity(_ context.Context) ActLogger {
+func Activity(c context.Context) ActLogger {
 	actOnce.Do(func() {
 		// setup log writer
 		actLogWriter := &writer{wr: setupLog("activity")}
@@ -36,5 +42,13 @@ func Activity(_ context.Context) ActLogger {
 		})
 	})
 
-	return actLogger{}
+	// - Start embedding any necessary metadata from context
+
+	trcId := ctx.GetReqId(c)
+	id := ctx.Get(c).UrlPath
+	// add any other metadata here
+
+	// - End embedding any necessary metadata from context
+
+	return actLogger{trcId: trcId, identifier: id}
 }
