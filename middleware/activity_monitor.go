@@ -69,7 +69,7 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 		"responseTime": time.Since(start).Milliseconds(),
 		"httpCode":     c.Response().Origin().Status(),
 		"requestAt":    start.Format(time.RFC3339Nano),
-		//"memoryUsage":  // coming soon
+		"memoryUsage":  1024,
 	}
 
 	log.Activity(c).Info(activityData)
