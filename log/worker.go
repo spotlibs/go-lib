@@ -15,13 +15,15 @@ var (
 )
 
 type wrkLogger struct {
-	reqId string
+	trcId      string
+	identifier string
 }
 
 func (l wrkLogger) Info(m Map) {
 	if !isOff.Load() {
 		// add request id
-		m["request-id"] = l.reqId
+		m["trace-id"] = l.trcId
+		m["identifier"] = l.identifier
 		wrkZapLog.Info("", zap.Any("payload", m))
 	}
 }
@@ -48,10 +50,11 @@ func Worker(c context.Context) WorkLogger {
 
 	// - Start embedding any necessary metadata from context
 
-	reqId := ctx.GetReqId(c)
+	trcId := ctx.GetReqId(c)
+	id := ctx.Get(c).SignaturePath
 	// add any other metadata here
 
 	// - End embedding any necessary metadata from context
 
-	return wrkLogger{reqId: reqId}
+	return wrkLogger{trcId: trcId, identifier: id}
 }

@@ -15,27 +15,31 @@ var (
 )
 
 type runLogger struct {
-	reqId string
+	trcId      string
+	identifier string
 }
 
 func (l runLogger) Info(m Map) {
 	if !isOff.Load() {
 		// add request id
-		m["request-id"] = l.reqId
+		m["trace-id"] = l.trcId
+		m["identifier"] = l.identifier
 		runZapLog.Info("", zap.Any("payload", m))
 	}
 }
 func (l runLogger) Warning(m Map) {
 	if !isOff.Load() {
 		// add request id
-		m["request-id"] = l.reqId
+		m["trace-id"] = l.trcId
+		m["identifier"] = l.identifier
 		runZapLog.Warn("", zap.Any("payload", m))
 	}
 }
 func (l runLogger) Error(m Map) {
 	if !isOff.Load() {
 		// add request id
-		m["request-id"] = l.reqId
+		m["trace-id"] = l.trcId
+		m["identifier"] = l.identifier
 		runZapLog.Error("", zap.Any("payload", m))
 	}
 }
@@ -62,10 +66,15 @@ func Runtime(c context.Context) RunLogger {
 
 	// - Start embedding any necessary metadata from context
 
-	reqId := ctx.GetReqId(c)
+	trcId := ctx.GetReqId(c)
+	id := ctx.Get(c).UrlPath
+	// replace with signature in case coming from artisan command
+	if id == "" {
+		id = ctx.Get(c).SignaturePath
+	}
 	// add any other metadata here
 
 	// - End embedding any necessary metadata from context
 
-	return runLogger{reqId: reqId}
+	return runLogger{trcId: trcId, identifier: id}
 }
