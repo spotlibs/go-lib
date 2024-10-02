@@ -6,6 +6,7 @@ import (
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 	"github.com/spotlibs/go-lib/debug"
+	"github.com/spotlibs/go-lib/log"
 	"github.com/spotlibs/go-lib/stderr"
 	"github.com/spotlibs/go-lib/stdresp"
 )
@@ -16,11 +17,14 @@ func Recover(c http.Context) {
 	defer func() {
 		// grab any panic occurring
 		if r := recover(); r != nil {
+			m := log.Map{"msg": debug.GetStackTraceInString(1)}
+			log.Runtime(c).Error(m)
+
 			prefixMsg := "Panic Runtime Error - "
 			suffixMsg := "Terjadi kesalahan, silahkan hubungi IT Helpdesk" // use masked message as the default
 			if facades.Config().GetBool("APP_DEBUG") {
 				// replace with the debug info if its enabled
-				suffixMsg = fmt.Sprint(r) + " - " + debug.GetStackTraceInString(1)
+				suffixMsg = fmt.Sprint(r) + " - " + m["msg"].(string)
 			}
 
 			err := stderr.Err(stderr.ERROR_CODE_SYSTEM, prefixMsg+suffixMsg, http.StatusOK)
