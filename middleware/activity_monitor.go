@@ -15,6 +15,7 @@ import (
 	"github.com/spotlibs/go-lib/stdresp"
 )
 
+const msgSizeLimit = 5000
 const msgExceedLimit = "More than 5000 character"
 
 // formDataFile holds information of each binary file in multipart form-data.
@@ -38,15 +39,11 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 	var req any
 	switch {
 	case hasPrefix(ct, "application/json", "application/x-www-form-urlencoded"):
-		req = captureRequestMap(c)
+		req = captureRequest(captureRequestMap(c))
 	case hasPrefix(ct, "multipart/form-data"):
-		req = captureRequestMultipart(c)
+		req = captureRequest(captureRequestMultipart(c))
 	default:
-		req = captureRequestMap(c) // treat any unhandled content-type as map
-	}
-	// replace request if the len more than the limit 5000
-	if checkLength(req) > 5000 {
-		req = msgExceedLimit
+		req = captureRequest(captureRequestMap(c)) // treat any unhandled content-type as map
 	}
 
 	// get metadata from context
@@ -75,6 +72,17 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 	log.Activity(c).Info(activityData)
 }
 
+// captureRequest capture the request body if meet the criteria and requirement.
+// Otherwise, will return msgExceedLimit.
+func captureRequest(req map[string]any) any {
+	// transform to json to make it easy to check the size
+	b, _ := sonic.ConfigFastest.Marshal(req)
+	if len(b) > msgSizeLimit {
+		return msgExceedLimit
+	}
+	return req
+}
+
 // captureResponse capture the response body if meet the criteria and requirement.
 func captureResponse(c http.Context) any {
 	// transform back response to an object before capturing
@@ -83,49 +91,23 @@ func captureResponse(c http.Context) any {
 		_ = sonic.ConfigFastest.Unmarshal(v.Bytes(), &res)
 
 		// replace data if its len more than the limit 5000
-		if checkLength(res.ResponseData) > 5000 {
+		if len(v.Bytes()) > msgSizeLimit {
 			res.ResponseData = msgExceedLimit
+			return res
 		}
 	}
 	return res
 }
 
-func checkLength(val any) int {
-	if val != nil {
-		return 0
-	}
-
-	switch v := val.(type) {
-	case string:
-		return len(v)
-	case int:
-		return v
-	case []int:
-		return len(v)
-	case []string:
-		return len(v)
-	case map[string]int:
-		return len(v)
-	case map[string]any:
-		return len(v)
-	case map[string]string:
-		return len(v)
-	case []any:
-		return len(v)
-	default:
-		return 0
-	}
-}
-
 // captureRequestMap capture request as map and transform it to json string.
-func captureRequestMap(c http.Context) any {
+func captureRequestMap(c http.Context) map[string]any {
 	return c.Request().All()
 }
 
 // captureRequestMultipart capture request multipart data and only get
 // the information of each file such as the filename, size and extension.
 // Include key-val form data but only pick the first value for each key.
-func captureRequestMultipart(c http.Context) any {
+func captureRequestMultipart(c http.Context) map[string]any {
 	reqOrg := c.Request().Origin()
 	_ = reqOrg.ParseMultipartForm(2 << 9) // 1024
 
