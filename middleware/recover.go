@@ -17,7 +17,7 @@ func Recover(c http.Context) {
 	defer func() {
 		// grab any panic occurring
 		if r := recover(); r != nil {
-			m := log.Map{"msg": debug.GetStackTraceInString(1)}
+			m := log.Map{"panic": "error panic recovered", "msg": debug.GetStackTraceInString(1)}
 			log.Runtime(c).Error(m)
 
 			prefixMsg := "Runtime Error - "
