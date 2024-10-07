@@ -41,13 +41,12 @@ func GetStackTraceInString(pick ...int) string {
 		file, line := funcPtr.FileLine(stack[i])
 		if strings.Contains(file, "/app/") {
 
+			s := fmt.Sprintf("%s:%d\n", file, line)
 			// capture the matched pick
 			if !pickAll && trackPicked == pick[0] {
-				s := fmt.Sprintf("%s:%d %s\n", file, line, funcPtr.Name())
 				return s
 			}
 
-			s := fmt.Sprintf("%s:%d %s \n", file, line, funcPtr.Name())
 			allStackTrace.WriteString(s)
 
 			trackPicked++
