@@ -20,8 +20,8 @@ func Recover(c http.Context) {
 			m := log.Map{"msg": debug.GetStackTraceInString(1)}
 			log.Runtime(c).Error(m)
 
-			prefixMsg := "Panic Runtime Error - "
-			suffixMsg := "Terjadi kesalahan, silahkan hubungi IT Helpdesk" // use masked message as the default
+			prefixMsg := "Runtime Error - "
+			suffixMsg := "Terjadi kesalahan, mohon coba beberapa saat lagi yaa..." // use masked message as the default
 			if facades.Config().GetBool("APP_DEBUG") {
 				// replace with the debug info if its enabled
 				suffixMsg = fmt.Sprint(r) + " - " + m["msg"].(string)
