@@ -5,6 +5,11 @@ import "sync/atomic"
 // isDebug concurrent safe debug signal holder.
 var isDebug atomic.Bool
 
+// IsOn return the debug state, return true if it's on.
+func IsOn() bool {
+	return isDebug.Load()
+}
+
 // EnableDebug concurrent safe helper to enable debug information in the
 // stderr.
 func EnableDebug() {

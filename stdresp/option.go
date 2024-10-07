@@ -3,6 +3,7 @@ package stdresp
 import (
 	"strings"
 
+	"github.com/spotlibs/go-lib/debug"
 	"github.com/spotlibs/go-lib/stderr"
 )
 
@@ -28,7 +29,7 @@ func WithErr(e error) StdOpt {
 	return func(s *Std) {
 		// set default response code and description
 		s.ResponseCode = stderr.ERROR_CODE_SYSTEM
-		s.ResponseDesc = stderr.ERROR_DESC_SYSTEM
+		s.ResponseDesc = "Terjadi kesalahan, mohon coba beberapa saat lagi yaa... "
 
 		// check if the error is created using stderr pkg
 		if stderr.IsStdError(e) {
@@ -43,6 +44,13 @@ func WithErr(e error) StdOpt {
 
 			// get the http code
 			s.httpCode = stderr.GetHttpCode(e)
+			return
+		}
+
+		// capture in case its random error that's not constructed with stderr pkg
+		//  but only print if the debug flag is on
+		if debug.IsOn() {
+			s.ResponseDesc = e.Error()
 		}
 	}
 }
