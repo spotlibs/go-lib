@@ -26,7 +26,7 @@ func GetStackTraceOnDebug(pick ...int) string {
 // state.
 func GetStackTraceInString(pick ...int) string {
 	stack := make([]uintptr, 2<<6)      // 128
-	length := runtime.Callers(3, stack) // skip the first 3 frames
+	length := runtime.Callers(5, stack) // skip the first 5 frames
 
 	var pickAll bool
 	// set default to capture the first found line
