@@ -9,7 +9,7 @@ import (
 // keyMetadata custom type that can prevent collision.
 type keyMetadata struct{}
 
-var keyCtx keyMetadata
+var contextKey keyMetadata
 
 // Metadata holds any request-scoped shared data within brispot microservice.
 type Metadata struct {
@@ -40,7 +40,7 @@ type Metadata struct {
 
 // Get retrieve Metadata from given context with key from this pkg.
 func Get(ctx context.Context) Metadata {
-	if mt, ok := ctx.Value(keyCtx).(Metadata); ok {
+	if mt, ok := ctx.Value(contextKey).(Metadata); ok {
 		return mt
 	}
 	return Metadata{}
@@ -73,7 +73,7 @@ func SetFromRequestHeader(c http.Context) {
 		PathGateway:     c.Request().Header("X-Path-Gateway"),
 		UrlPath:         c.Request().Path(),
 	}
-	c.WithValue(keyCtx, mt)
+	c.WithValue(contextKey, mt)
 }
 
 // GetReqId extract request id from given context. This is a shortcut for Get
