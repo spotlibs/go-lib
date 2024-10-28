@@ -21,7 +21,7 @@ type actLogger struct {
 
 func (l actLogger) Info(m Map) {
 	if !isOff.Load() {
-		m["trace-id"] = l.trcId
+		m["traceID"] = l.trcId
 		m["identifier"] = l.identifier
 		actZapLog.Info("", zap.Any("payload", m))
 	}

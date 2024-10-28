@@ -22,7 +22,7 @@ type runLogger struct {
 func (l runLogger) Info(m Map) {
 	if !isOff.Load() {
 		// add request id
-		m["trace-id"] = l.trcId
+		m["traceID"] = l.trcId
 		m["identifier"] = l.identifier
 		runZapLog.Info("", zap.Any("payload", m))
 	}
@@ -30,7 +30,7 @@ func (l runLogger) Info(m Map) {
 func (l runLogger) Warning(m Map) {
 	if !isOff.Load() {
 		// add request id
-		m["trace-id"] = l.trcId
+		m["traceID"] = l.trcId
 		m["identifier"] = l.identifier
 		runZapLog.Warn("", zap.Any("payload", m))
 	}
@@ -38,7 +38,7 @@ func (l runLogger) Warning(m Map) {
 func (l runLogger) Error(m Map) {
 	if !isOff.Load() {
 		// add request id
-		m["trace-id"] = l.trcId
+		m["traceID"] = l.trcId
 		m["identifier"] = l.identifier
 		runZapLog.Error("", zap.Any("payload", m))
 	}
