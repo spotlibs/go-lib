@@ -3,7 +3,7 @@ module github.com/spotlibs/go-lib
 go 1.22
 
 require (
-	github.com/bytedance/sonic v1.12.2
+	github.com/bytedance/sonic v1.12.3
 	github.com/goravel/framework v1.14.7
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.27.0
