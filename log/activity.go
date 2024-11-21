@@ -29,6 +29,11 @@ func (l actLogger) Info(m Map) {
 
 // Activity start ActLogger.
 func Activity(c context.Context) ActLogger {
+	// prevent panic
+	if c == nil {
+		c = context.Background()
+	}
+
 	actOnce.Do(func() {
 		// setup log writer
 		actLogWriter := &writer{wr: setupLog("activity")}
