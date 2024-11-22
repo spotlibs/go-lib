@@ -51,6 +51,9 @@ func Activity(c context.Context) ActLogger {
 
 	trcId := ctx.GetReqId(c)
 	id := ctx.Get(c).UrlPath
+	if id == "" {
+		id = ctx.Get(c).SignaturePath
+	}
 	// add any other metadata here
 
 	// - End embedding any necessary metadata from context
