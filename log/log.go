@@ -1,22 +1,31 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
-	"sync/atomic"
 
 	"github.com/bytedance/sonic"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
+type logCtxKey struct{}
+
+var logOffKey = logCtxKey{}
+
+// Off give signal to logger to not write log. Simply inject this to Activity,
+// Runtime or Worker.
+func Off() context.Context {
+	return context.WithValue(context.Background(), logOffKey, true)
+}
+
 const logDir = "./storage/logs"
 
 var (
 	cleanupTasks []func()
-	isOff        atomic.Bool
 	output       io.WriteCloser
 )
 
@@ -34,18 +43,6 @@ func Cleanup() {
 		// execute all the registered cleanup task
 		cleanupTasks[i]()
 	}
-}
-
-// Off to not print the log. Useful when unit testing, since we mostly won't
-// need it in unit test.
-func Off() {
-	isOff.Store(true)
-}
-
-// On print the log. By default, there is no need to call this function unless
-// Off is ever called.
-func On() {
-	isOff.Store(false)
 }
 
 type writer struct {

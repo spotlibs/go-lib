@@ -20,28 +20,19 @@ type runLogger struct {
 }
 
 func (l runLogger) Info(m Map) {
-	if !isOff.Load() {
-		// add request id
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		runZapLog.Info("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	runZapLog.Info("", zap.Any("payload", m))
 }
 func (l runLogger) Warning(m Map) {
-	if !isOff.Load() {
-		// add request id
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		runZapLog.Warn("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	runZapLog.Warn("", zap.Any("payload", m))
 }
 func (l runLogger) Error(m Map) {
-	if !isOff.Load() {
-		// add request id
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		runZapLog.Error("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	runZapLog.Error("", zap.Any("payload", m))
 }
 
 // Runtime start RunLogger.
@@ -49,6 +40,11 @@ func Runtime(c context.Context) RunLogger {
 	// prevent panic
 	if c == nil {
 		c = context.Background()
+	}
+
+	// use the no-op logger instead if the context contain off signal
+	if v, ok := c.Value(logOffKey).(bool); ok && v {
+		return noop{}
 	}
 
 	runOnce.Do(func() {

@@ -20,12 +20,9 @@ type wrkLogger struct {
 }
 
 func (l wrkLogger) Info(m Map) {
-	if !isOff.Load() {
-		// add request id
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		wrkZapLog.Info("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	wrkZapLog.Info("", zap.Any("payload", m))
 }
 
 // Worker start WorkLogger.
@@ -33,6 +30,11 @@ func Worker(c context.Context) WorkLogger {
 	// prevent panic
 	if c == nil {
 		c = context.Background()
+	}
+
+	// use the no-op logger instead if the context contain off signal
+	if v, ok := c.Value(logOffKey).(bool); ok && v {
+		return noop{}
 	}
 
 	wrkOnce.Do(func() {

@@ -20,11 +20,9 @@ type actLogger struct {
 }
 
 func (l actLogger) Info(m Map) {
-	if !isOff.Load() {
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		actZapLog.Info("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	actZapLog.Info("", zap.Any("payload", m))
 }
 
 // Activity start ActLogger.
@@ -32,6 +30,11 @@ func Activity(c context.Context) ActLogger {
 	// prevent panic
 	if c == nil {
 		c = context.Background()
+	}
+
+	// use the no-op logger instead if the context contain off signal
+	if v, ok := c.Value(logOffKey).(bool); ok && v {
+		return noop{}
 	}
 
 	actOnce.Do(func() {
