@@ -32,6 +32,11 @@ func Worker(c context.Context) WorkLogger {
 		c = context.Background()
 	}
 
+	// use the no-op logger instead if the context contain off signal
+	if v, ok := c.Value(logOffKey).(bool); ok && v {
+		return noop{}
+	}
+
 	wrkOnce.Do(func() {
 		// setup log writer
 		wrkLogWriter := &writer{wr: setupLog("worker")}

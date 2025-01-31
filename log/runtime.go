@@ -42,6 +42,11 @@ func Runtime(c context.Context) RunLogger {
 		c = context.Background()
 	}
 
+	// use the no-op logger instead if the context contain off signal
+	if v, ok := c.Value(logOffKey).(bool); ok && v {
+		return noop{}
+	}
+
 	runOnce.Do(func() {
 		// setup log writer
 		runLogWriter := &writer{wr: setupLog("runtime")}

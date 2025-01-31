@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,16 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+type logCtxKey struct{}
+
+var logOffKey = logCtxKey{}
+
+// Off give signal to logger to not write log. Simply inject this to Activity,
+// Runtime or Worker.
+func Off() context.Context {
+	return context.WithValue(context.Background(), logOffKey, true)
+}
 
 const logDir = "./storage/logs"
 
