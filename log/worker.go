@@ -20,12 +20,9 @@ type wrkLogger struct {
 }
 
 func (l wrkLogger) Info(m Map) {
-	if !isOff.Load() {
-		// add request id
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		wrkZapLog.Info("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	wrkZapLog.Info("", zap.Any("payload", m))
 }
 
 // Worker start WorkLogger.

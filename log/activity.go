@@ -20,11 +20,9 @@ type actLogger struct {
 }
 
 func (l actLogger) Info(m Map) {
-	if !isOff.Load() {
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		actZapLog.Info("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	actZapLog.Info("", zap.Any("payload", m))
 }
 
 // Activity start ActLogger.

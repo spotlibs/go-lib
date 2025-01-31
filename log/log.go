@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"sync/atomic"
 
 	"github.com/bytedance/sonic"
 	"go.uber.org/zap"
@@ -16,7 +15,6 @@ const logDir = "./storage/logs"
 
 var (
 	cleanupTasks []func()
-	isOff        atomic.Bool
 	output       io.WriteCloser
 )
 
@@ -34,18 +32,6 @@ func Cleanup() {
 		// execute all the registered cleanup task
 		cleanupTasks[i]()
 	}
-}
-
-// Off to not print the log. Useful when unit testing, since we mostly won't
-// need it in unit test.
-func Off() {
-	isOff.Store(true)
-}
-
-// On print the log. By default, there is no need to call this function unless
-// Off is ever called.
-func On() {
-	isOff.Store(false)
 }
 
 type writer struct {

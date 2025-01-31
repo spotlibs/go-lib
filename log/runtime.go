@@ -20,28 +20,19 @@ type runLogger struct {
 }
 
 func (l runLogger) Info(m Map) {
-	if !isOff.Load() {
-		// add request id
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		runZapLog.Info("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	runZapLog.Info("", zap.Any("payload", m))
 }
 func (l runLogger) Warning(m Map) {
-	if !isOff.Load() {
-		// add request id
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		runZapLog.Warn("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	runZapLog.Warn("", zap.Any("payload", m))
 }
 func (l runLogger) Error(m Map) {
-	if !isOff.Load() {
-		// add request id
-		m["traceID"] = l.trcId
-		m["identifier"] = l.identifier
-		runZapLog.Error("", zap.Any("payload", m))
-	}
+	m["traceID"] = l.trcId
+	m["identifier"] = l.identifier
+	runZapLog.Error("", zap.Any("payload", m))
 }
 
 // Runtime start RunLogger.
