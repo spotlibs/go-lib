@@ -1,6 +1,6 @@
 module github.com/spotlibs/go-lib
 
-go 1.22
+go 1.23
 
 require (
 	github.com/bytedance/sonic v1.12.8
