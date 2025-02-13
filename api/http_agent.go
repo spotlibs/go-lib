@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bytedance/sonic"
@@ -10,24 +11,57 @@ import (
 // DEFAULT_TIMEOUT the default timeout of team specification.
 var DEFAULT_TIMEOUT = 10 * time.Second
 
-// Response object that may be returned by Agent.
-type Response struct {
-	StatusCode int
-	Body       []byte
-	Header     map[string][]string
+// response object that may be returned by Agent.
+type response struct {
+	statusCode int
+	body       []byte
+	header     map[string][]string
 }
+
+// GetStatusCode get the http status code.
+func (r *response) GetStatusCode() int { return r.statusCode }
+
+// GetBody get the raw response body in bytes.
+func (r *response) GetBody() []byte { return r.body }
+
+// GetHeaders get the copy the original response header, after combining the
+// value using comma.
+func (r *response) GetHeaders() map[string]string {
+	var h = make(map[string]string)
+	for k, v := range r.header {
+		h[k] = strings.Join(v, ",")
+	}
+	return h
+}
+
+// GetHeader get the response header by the given key after combining the value
+// using comma.
+func (r *response) GetHeader(key string) string { return strings.Join(r.header[key], ",") }
 
 // ToObject transform Response.Body to any object using json encoding.
-func ToObject[T any](obj Response) (T, error) {
+func ToObject[T any](obj response) (T, error) {
 	var t T
-	return t, sonic.ConfigFastest.Unmarshal(obj.Body, &t)
+	return t, sonic.ConfigFastest.Unmarshal(obj.body, &t)
 }
 
-type HTTPAgent interface {
-	// Do send given request using http, and optionally set custom timeout if
+type HTTPResponse interface {
+	// GetStatusCode get the http status code.
+	GetStatusCode() int
+	// GetBody get the raw response body in bytes.
+	GetBody() []byte
+	// GetHeaders get the original response header, after combining the value to
+	// one using comma.
+	GetHeaders() map[string]string
+	// GetHeader get the response header by the given key after combining the value
+	// using comma.
+	GetHeader(key string) string
+}
+
+type HTTPClient interface {
+	// Call send given request using http, and optionally set custom timeout if
 	// provided, otherwise will use DEFAULT_TIMEOUT.
 	//
 	// This function also help setting any necessary metadata for spotlibs using
 	// ctx pkg that also come from this lib.
-	Do(req *http.Request, timeouts ...time.Duration) (Response, error)
+	Call(req *http.Request, timeouts ...time.Duration) (HTTPResponse, error)
 }
