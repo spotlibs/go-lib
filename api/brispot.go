@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -9,27 +11,30 @@ import (
 	"github.com/spotlibs/go-lib/ctx"
 )
 
-// NewHTTPAgent return HTTPAgent implementer that also set some metadata header
+// NewHTTPClient return HTTPClient implementer that also set some metadata header
 // before sending the request.
-func NewHTTPAgent() HTTPAgent {
+func NewHTTPClient() HTTPClient {
 	var trans http.Transport
 	trans.MaxConnsPerHost = 50
 	trans.MaxIdleConnsPerHost = 15
 	trans.MaxIdleConns = 50
 	trans.IdleConnTimeout = 10 * time.Second
+	trans.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true,
+	}
 
 	var client http.Client
 	client.Transport = &trans
 	client.Timeout = 30 * time.Second
 
-	return &httpAgent{cl: &client}
+	return &httpClient{cl: &client}
 }
 
-type httpAgent struct {
+type httpClient struct {
 	cl *http.Client
 }
 
-func (h *httpAgent) Do(req *http.Request, timeouts ...time.Duration) (Response, error) {
+func (h *httpClient) Call(req *http.Request, timeouts ...time.Duration) (HTTPResponse, error) {
 	ctx.SetHTTPRequestHeader(req)
 	reqTimeout := DEFAULT_TIMEOUT
 	if len(timeouts) > 0 {
@@ -40,17 +45,17 @@ func (h *httpAgent) Do(req *http.Request, timeouts ...time.Duration) (Response, 
 	defer cancel()
 	req = req.WithContext(ctxWithTimeout)
 
-	var response Response
+	var resp response
 	res, err := h.cl.Do(req)
 	if err != nil {
-		return response, err
+		return nil, fmt.Errorf("connection error on http request: %w", err)
 	}
 	defer res.Body.Close()
 
-	response.Body, _ = io.ReadAll(res.Body)
-	response.StatusCode = res.StatusCode
-	response.Header = make(map[string][]string)
-	response.Header = res.Header
+	resp.body, _ = io.ReadAll(res.Body)
+	resp.statusCode = res.StatusCode
+	resp.header = make(map[string][]string)
+	resp.header = res.Header
 
-	return response, nil
+	return &resp, nil
 }
