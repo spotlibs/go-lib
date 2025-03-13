@@ -38,10 +38,10 @@ func (r *response) GetHeaders() map[string]string {
 // using comma.
 func (r *response) GetHeader(key string) string { return strings.Join(r.header[key], ",") }
 
-// ToObject transform Response.Body to any object using json encoding.
-func ToObject[T any](obj response) (T, error) {
+// ToObject transform HTTPResponse.GetBody to any object using json encoding.
+func ToObject[T any](obj HTTPResponse) (T, error) {
 	var t T
-	return t, sonic.ConfigFastest.Unmarshal(obj.body, &t)
+	return t, sonic.ConfigFastest.Unmarshal(obj.GetBody(), &t)
 }
 
 type HTTPResponse interface {
