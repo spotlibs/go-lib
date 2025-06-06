@@ -27,6 +27,9 @@ type formDataFile struct {
 
 // ActivityMonitor capture and log all request/response.
 func ActivityMonitor(c http.Context) {
+	if c.Request().Path() == "ping" {
+		return
+	}
 	now := time.Now()
 	c.Request().Next()
 	apiActivityRecorder(c, now)
