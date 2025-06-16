@@ -8,7 +8,7 @@ import (
 // MetadataHeader set metadata information come from request header to current
 // context.
 func MetadataHeader(c http.Context) {
-	if c.Request().Path() == "ping" {
+	if c.Request().Path() == "/ping" {
 		return
 	}
 	ctx.SetFromRequestHeader(c)

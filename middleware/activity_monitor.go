@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"mime/multipart"
 	"slices"
 	"strings"
@@ -28,8 +27,7 @@ type formDataFile struct {
 
 // ActivityMonitor capture and log all request/response.
 func ActivityMonitor(c http.Context) {
-	fmt.Println("route path:", c.Request().Path())
-	if c.Request().Path() == "ping" {
+	if c.Request().Path() == "/ping" {
 		return
 	}
 	now := time.Now()
