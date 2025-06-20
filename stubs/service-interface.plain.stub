@@ -1,0 +1,12 @@
+package services
+
+import (
+	"context"
+
+	"brispot/app/models"
+	"brispot/app/models/dtos"
+)
+
+type DummyInterface interface {
+	DummyMethod(ctx context.Context) (result interface{}, err error)
+}

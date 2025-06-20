@@ -1,0 +1,29 @@
+package dtos
+
+import "errors"
+
+type DummyDto struct {
+	FieldObjectExample FieldObjectExample `json:"field_object_example"`
+	FieldObjectArray   []FieldObjectArray `json:"field_object_array"`
+}
+
+type FieldObjectExample struct {
+	Example string `json:"example,omitempty"`
+}
+
+type FieldObjectArray struct {
+	Example uint `json:"example"`
+}
+
+func (data *DummyDto) Validate() error {
+	if data.FieldObjectExample.Example == "" {
+		return errors.New("failed ! empty data")
+	}
+
+	for _, val := range data.FieldObjectArray {
+		if val.Example == 0 {
+			return errors.New("failed ! empty data")
+		}
+	}
+	return nil
+}
