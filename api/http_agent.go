@@ -58,7 +58,7 @@ type HTTPResponse interface {
 }
 
 type HTTPClient interface {
-	// Call send given request using http, and optionally set custom timeout if
+	// Call send given request using HTTP, and optionally set custom timeout if
 	// provided, otherwise will use DEFAULT_TIMEOUT.
 	//
 	// This function also help setting any necessary metadata for spotlibs using

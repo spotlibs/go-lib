@@ -48,7 +48,7 @@ func (h *httpClient) Call(req *http.Request, timeouts ...time.Duration) (HTTPRes
 	var resp response
 	res, err := h.cl.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("connection error on http request: %w", err)
+		return nil, fmt.Errorf("connection error on HTTP request: %w", err)
 	}
 	defer res.Body.Close()
 
