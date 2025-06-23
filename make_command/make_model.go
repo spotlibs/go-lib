@@ -5,6 +5,7 @@ import (
 	"github.com/goravel/framework/contracts/console"
 	"github.com/goravel/framework/contracts/console/command"
 	"github.com/goravel/framework/facades"
+	"github.com/spotlibs/go-lib/stubs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -118,10 +119,8 @@ func (receiver *MakeModel) toSnakeCase(s string) string {
 }
 
 func (receiver *MakeModel) generateModelContent(modelName, tableName string) (string, error) {
-	stubPath := "stubs/model.plain.stub"
-
-	// Read stub file
-	stubContent, err := os.ReadFile(stubPath)
+	// Read stub file from embedded filesystem
+	stubContent, err := stubs.StubsFS.ReadFile("model.plain.stub")
 	if err != nil {
 		return "", err
 	}

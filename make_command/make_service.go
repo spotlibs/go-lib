@@ -5,6 +5,7 @@ import (
 	"github.com/goravel/framework/contracts/console"
 	"github.com/goravel/framework/contracts/console/command"
 	"github.com/goravel/framework/facades"
+	"github.com/spotlibs/go-lib/stubs"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -122,13 +123,12 @@ func (receiver *MakeService) convertToInterfaceName(name string) string {
 		return name + "Interface"
 	}
 
-	// Otherwise, append ServiceInterface
 	return name + "ServiceInterface"
 }
 
 func (receiver *MakeService) getServiceName(interfaceName string) string {
 	// Remove "Interface" suffix to get service name
-	// TestingDataServiceInterface -> TestingDataService
+	// Ex : TestingDataServiceInterface -> TestingDataService
 	return strings.TrimSuffix(interfaceName, "Interface")
 }
 
@@ -266,10 +266,8 @@ func (receiver *MakeService) generateInterfaceAST(interfaceName string) *ast.Gen
 }
 
 func (receiver *MakeService) generateInterfaceFileContent(interfaceName string) (string, error) {
-	stubPath := "stubs/interface.plain.stub"
-
-	// Read stub file
-	stubContent, err := os.ReadFile(stubPath)
+	// Read stub file from embedded filesystem
+	stubContent, err := stubs.StubsFS.ReadFile("interface.plain.stub")
 	if err != nil {
 		return "", err
 	}
@@ -316,10 +314,8 @@ func (receiver *MakeService) extractMethodName(interfaceName string) string {
 }
 
 func (receiver *MakeService) generateServiceContent(structName, serviceName, interfaceName, methodName string) (string, error) {
-	stubPath := "stubs/service.plain.stub"
-
-	// Read stub file
-	stubContent, err := os.ReadFile(stubPath)
+	// Read stub file from embedded filesystem
+	stubContent, err := stubs.StubsFS.ReadFile("service.plain.stub")
 	if err != nil {
 		return "", err
 	}

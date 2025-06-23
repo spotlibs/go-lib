@@ -5,6 +5,7 @@ import (
 	"github.com/goravel/framework/contracts/console"
 	"github.com/goravel/framework/contracts/console/command"
 	"github.com/goravel/framework/facades"
+	"github.com/spotlibs/go-lib/stubs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -110,10 +111,8 @@ func (receiver *MakeDto) toSnakeCase(s string) string {
 }
 
 func (receiver *MakeDto) generateDtoContent(dtoName, tableName string) (string, error) {
-	stubPath := "stubs/dto.plain.stub"
-
-	// Read stub file
-	stubContent, err := os.ReadFile(stubPath)
+	// Read stub file from embedded filesystem
+	stubContent, err := stubs.StubsFS.ReadFile("dto.plain.stub")
 	if err != nil {
 		return "", err
 	}

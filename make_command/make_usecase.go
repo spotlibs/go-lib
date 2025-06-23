@@ -5,6 +5,7 @@ import (
 	"github.com/goravel/framework/contracts/console"
 	"github.com/goravel/framework/contracts/console/command"
 	"github.com/goravel/framework/facades"
+	"github.com/spotlibs/go-lib/stubs"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -122,13 +123,12 @@ func (receiver *MakeUsecase) convertToInterfaceName(name string) string {
 		return name + "Interface"
 	}
 
-	// Otherwise, append UsecaseInterface
 	return name + "UsecaseInterface"
 }
 
 func (receiver *MakeUsecase) getUsecaseName(interfaceName string) string {
 	// Remove "Interface" suffix to get usecase name
-	// UserUsecaseInterface -> UserUsecase
+	// Ex : UserUsecaseInterface -> UserUsecase
 	return strings.TrimSuffix(interfaceName, "Interface")
 }
 
@@ -266,10 +266,8 @@ func (receiver *MakeUsecase) generateInterfaceAST(interfaceName string) *ast.Gen
 }
 
 func (receiver *MakeUsecase) generateInterfaceFileContent(interfaceName string) (string, error) {
-	stubPath := "stubs/usecase-interface.plain.stub"
-
-	// Read stub file
-	stubContent, err := os.ReadFile(stubPath)
+	// Read stub file from embedded filesystem
+	stubContent, err := stubs.StubsFS.ReadFile("usecase-interface.plain.stub")
 	if err != nil {
 		return "", err
 	}
@@ -316,10 +314,8 @@ func (receiver *MakeUsecase) extractMethodName(interfaceName string) string {
 }
 
 func (receiver *MakeUsecase) generateUsecaseContent(structName, usecaseName, interfaceName, methodName string) (string, error) {
-	stubPath := "stubs/usecase.plain.stub"
-
-	// Read stub file
-	stubContent, err := os.ReadFile(stubPath)
+	// Read stub file from embedded filesystem
+	stubContent, err := stubs.StubsFS.ReadFile("usecase.plain.stub")
 	if err != nil {
 		return "", err
 	}
