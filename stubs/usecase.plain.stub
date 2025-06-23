@@ -1,0 +1,16 @@
+package usecases
+
+import (
+	"context"
+)
+
+type dummyUsecase struct {}
+
+func NewDummyUsecase() DummyUsecaseInterface {
+	return &dummyUsecase{}
+}
+
+func (s *dummyUsecase) DummyMethod(ctx context.Context) (result interface{}, err error) {
+	//TODO
+	panic("TODO")
+}

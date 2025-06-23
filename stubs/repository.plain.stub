@@ -1,0 +1,22 @@
+package repositories
+
+import (
+    "brispot/app/models"
+    "context"
+    "github.com/goravel/framework/contracts/database/orm"
+)
+
+type dummyRepository struct {
+    query orm.Query
+}
+
+func NewDummyRepository(query orm.Query) DummyRepositoryInterface {
+    return &dummyRepository{
+       query: query,
+    }
+}
+
+func (r *dummyRepository) CreateDummy(ctx context.Context, dummy models.Dummy) (err error) {
+    //TODO
+    panic("TODO")
+}

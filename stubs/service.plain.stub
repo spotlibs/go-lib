@@ -1,0 +1,21 @@
+package services
+
+import (
+	"brispot/app/library/rest"
+	"context"
+)
+
+type dummyService struct {
+	rest rest.RestClientInterface
+}
+
+func NewDummyService(rest rest.RestClientInterface) DummyServiceInterface {
+	return &dummyService{
+		rest: rest,
+	}
+}
+
+func (s *dummyService) DummyMethod(ctx context.Context) (result interface{}, err error) {
+	//TODO
+	panic("TODO")
+}

@@ -1,0 +1,15 @@
+package models
+
+import (
+	"github.com/goravel/framework/database/orm"
+)
+
+type DummyModel struct {
+	orm.Model
+	orm.SoftDeletes
+	orm.Timestamps
+}
+
+func (r *DummyModel) TableName() string {
+	return "dummy_model"
+}

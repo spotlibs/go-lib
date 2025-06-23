@@ -1,0 +1,9 @@
+package usecases
+
+import (
+	"context"
+)
+
+type DummyUsecaseInterface interface {
+    DummyMethod(ctx context.Context) (result interface{}, err error)
+}

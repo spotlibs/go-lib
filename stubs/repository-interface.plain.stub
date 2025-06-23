@@ -1,0 +1,10 @@
+package repositories
+
+import (
+    "brispot/app/models"
+    "context"
+)
+
+type DummyRepositoryInterface interface {
+    CreateDummy(ctx context.Context, dummy models.Dummy) (err error)
+}
