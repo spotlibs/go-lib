@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
+	"github.com/goravel/framework/facades"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -140,7 +141,7 @@ func createOrOpenFile(logPath string) io.WriteCloser {
 // formatMsg format log message based on the level string and M as the payload.
 func formatMsg(t, lvl string, m Map) string {
 	payload, _ := sonic.ConfigStd.MarshalToString(m)
-	return fmt.Sprintf("[%s] ::%s.%s.%s:: %s\n", t, os.Getenv("APP_NAME"), os.Getenv("APP_ENV"), lvl, payload)
+	return fmt.Sprintf("[%s] ::%s.%s.%s:: %s\n", t, facades.Config().GetString("APP_NAME"), facades.Config().GetString("APP_ENV"), lvl, payload)
 }
 
 // getZapJsonEncoder return common setting for zap json encoder.
