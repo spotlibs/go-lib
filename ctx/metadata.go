@@ -2,8 +2,13 @@ package ctx
 
 import (
 	"context"
+	"os"
+	"strings"
 
+	"github.com/goravel/framework/contracts/console"
+	"github.com/goravel/framework/contracts/foundation"
 	"github.com/goravel/framework/contracts/http"
+	"github.com/goravel/framework/facades"
 )
 
 // keyMetadata custom type that can prevent collision.
@@ -74,6 +79,17 @@ func SetFromRequestHeader(c http.Context) {
 		UrlPath:         c.Request().Path(),
 	}
 	c.WithValue(contextKey, mt)
+}
+
+func SetFromConsoleCtx(c console.Context) {
+	mt := Metadata{
+		ReqId:         GenerateTimeBasedID(),
+		SignaturePath: strings.Join(c.Arguments(), " "),
+		UserAgent:     func() string { x, _ := os.Hostname(); return x }(),
+	}
+	facades.App().Bind("spotlibsCtx", func(app foundation.Application) (any, error) {
+		return context.WithValue(context.Background(), contextKey, mt), nil
+	})
 }
 
 // GetReqId extract request id from given context. This is a shortcut for Get
