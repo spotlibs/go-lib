@@ -1,6 +1,7 @@
 package stderr
 
 import (
+	"fmt"
 	"sync/atomic"
 
 	"github.com/spotlibs/go-lib/debug"
@@ -14,6 +15,7 @@ var debugDepthLevel atomic.Int32
 func errWithDebug(code string, msg string, httpCode int, metadata ...string) error {
 	e := err{code: code, msg: msg, httpCode: httpCode, metadata: metadata}
 
+	fmt.Println("debugDepthLevel.Load():", debugDepthLevel.Load())
 	switch debugDepthLevel.Load() {
 	case -1:
 		e.stackTrc = debug.GetStackTraceOnDebug()
