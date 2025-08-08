@@ -86,6 +86,7 @@ func SetFromConsoleCtx(c console.Context) {
 		ReqId:         GenerateTimeBasedID(),
 		SignaturePath: strings.Join(c.Arguments(), " "),
 		UserAgent:     func() string { x, _ := os.Hostname(); return x }(),
+		App:           "console",
 	}
 	facades.App().Bind("spotlibsCtx", func(app foundation.Application) (any, error) {
 		return context.WithValue(context.Background(), contextKey, mt), nil

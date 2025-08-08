@@ -1,9 +1,15 @@
 package stderr
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/goravel/framework/facades"
+	spotlibsCtx "github.com/spotlibs/go-lib/ctx"
+	"github.com/spotlibs/go-lib/debug"
+	"github.com/spotlibs/go-lib/log"
 )
 
 // err standard object that hold any information about the error.
@@ -122,6 +128,11 @@ func ErrUnsupported(msg ...string) error {
 func ErrRuntime(msg ...string) error {
 	if len(msg) < 1 {
 		msg = append(msg, ERROR_DESC_SYSTEM)
+	}
+	ctx, _ := facades.App().Make("spotlibsCtx")
+	log.Runtime(ctx.(context.Context)).Error(log.Map{"msg": msg[0] + " - " + debug.GetStackTraceInString(1)})
+	if !facades.Config().GetBool("APP_DEBUG") && spotlibsCtx.Get(ctx.(context.Context)).App != "console" {
+		return errWithDebug(ERROR_CODE_SYSTEM, "Terjadi kesalahan, mohon coba beberapa saat lagi yaa...", http.StatusOK)
 	}
 	return errWithDebug(ERROR_CODE_SYSTEM, msg[0], http.StatusOK)
 }
