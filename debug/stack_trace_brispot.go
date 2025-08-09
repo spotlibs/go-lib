@@ -12,10 +12,7 @@ import (
 // May be used when need to get the stack trace only if the debug is enabled,
 // since calling runtime.Caller is expensive.
 func GetStackTraceOnDebug(pick ...int) string {
-	if isDebug.Load() {
-		return GetStackTraceInString(pick...)
-	}
-	return ""
+	return GetStackTraceInString(pick...)
 }
 
 // GetStackTraceInString return the stack trace utilizing runtime.Caller but
@@ -26,7 +23,7 @@ func GetStackTraceOnDebug(pick ...int) string {
 // state.
 func GetStackTraceInString(pick ...int) string {
 	stack := make([]uintptr, 2<<6)      // 128
-	length := runtime.Callers(4, stack) // skip the first 4 frames
+	length := runtime.Callers(0, stack) // skip no frames
 
 	var pickAll bool
 	// set default to capture the first found line

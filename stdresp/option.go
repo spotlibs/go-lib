@@ -37,7 +37,9 @@ func WithErr(e error) StdOpt {
 			s.ResponseCode = stderr.GetCode(e)
 
 			// do trim space in case stacktrace is empty
-			s.ResponseDesc = strings.TrimSpace(stderr.GetMsg(e) + " " + stderr.GetStackTrace(e))
+			if (s.ResponseCode == stderr.ERROR_CODE_SYSTEM && debug.IsOn()) || s.ResponseCode != stderr.ERROR_CODE_SYSTEM {
+				s.ResponseDesc = strings.TrimSpace(stderr.GetMsg(e) + " " + stderr.GetStackTrace(e))
+			}
 
 			// also if any, get the validation message too
 			s.ResponseValidation = stderr.GetValidationErrorMsg(e)
