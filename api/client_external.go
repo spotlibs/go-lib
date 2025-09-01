@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/goravel/framework/facades"
+	"github.com/redis/go-redis/v9"
 	"github.com/spotlibs/go-lib/ctx"
+	"github.com/spotlibs/go-lib/databases"
 )
 
 // NewHTTPClientExternal return HTTPClient implementer that also set some metadata header
@@ -85,15 +87,19 @@ func (h *httpClientExternal) checkMock(url string) (*MapRoute, error) {
 		return nil, errors.New("cannot use mock in production environment")
 	}
 
-	key := "eksternal_mock_url_mapping:" + url
-	mapRouteData := facades.Cache().GetString(key, "")
+	redisClient := databases.GetRedisClient()
 
-	if mapRouteData == "" {
+	key := "eksternal_mock_url_mapping:" + url
+	mapRouteData, err := redisClient.Get(context.Background(), key).Result()
+	if errors.Is(err, redis.Nil) {
 		return &MapRoute{}, nil
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	var mapRoute MapRoute
-	err := json.Unmarshal([]byte(mapRouteData), &mapRoute)
+	err = json.Unmarshal([]byte(mapRouteData), &mapRoute)
 	if err != nil {
 		return nil, err
 	}
