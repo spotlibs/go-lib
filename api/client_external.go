@@ -7,13 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/goravel/framework/facades"
 	"github.com/redis/go-redis/v9"
-	"github.com/spotlibs/go-lib/ctx"
 	"github.com/spotlibs/go-lib/databases"
 )
 
@@ -46,7 +46,7 @@ type MapRoute struct {
 }
 
 func (h *httpClientExternal) Call(req *http.Request, timeouts ...time.Duration) (HTTPResponse, error) {
-	ctx.SetHTTPRequestHeader(req)
+	// Set Timeout
 	reqTimeout := DEFAULT_TIMEOUT
 	if len(timeouts) > 0 {
 		reqTimeout = timeouts[0]
@@ -63,17 +63,39 @@ func (h *httpClientExternal) Call(req *http.Request, timeouts ...time.Duration) 
 		}
 	}
 
+	// Prepare Request
 	ctxWithTimeout, cancel := context.WithTimeout(req.Context(), reqTimeout)
 	defer cancel()
 	req = req.WithContext(ctxWithTimeout)
 
+	// Push Default Header
+	if req.Header.Get("Content-Type") == "" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Set("User-Agent", "go-http-client/1.0")
+	}
+	if req.Header.Get("Accept") == "" {
+		req.Header.Set("Accept", "application/json")
+	}
+	if req.Header.Get("Accept-Encoding") == "" {
+		req.Header.Set("Accept-Encoding", "gzip, deflate")
+	}
+
+	// Call HTTP
 	var resp response
 	res, err := h.cl.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("connection error on HTTP request: %w", err)
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}(res.Body)
 
+	// Responses
 	resp.body, _ = io.ReadAll(res.Body)
 	resp.statusCode = res.StatusCode
 	resp.header = make(map[string][]string)
