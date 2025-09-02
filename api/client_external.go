@@ -21,7 +21,7 @@ import (
 
 // NewHTTPClientExternal return HTTPClient implementer that also set some metadata header
 // before sending the request.
-func NewHTTPClientExternal() HTTPClient {
+func NewHTTPClientExternal() HTTPClientExternal {
 	var trans http.Transport
 	trans.MaxConnsPerHost = 50
 	trans.MaxIdleConnsPerHost = 15
@@ -68,7 +68,7 @@ type SurroundingLogResponse struct {
 	Header   any `json:"header"`
 }
 
-func (h *httpClientExternal) Call(req *http.Request, timeouts ...time.Duration) (HTTPResponse, error) {
+func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request, timeouts ...time.Duration) (HTTPResponse, error) {
 	// Init
 	startTime := time.Now()
 	metadata := ctx.Get(req.Context())
@@ -154,7 +154,7 @@ func (h *httpClientExternal) Call(req *http.Request, timeouts ...time.Duration) 
 	}
 
 	// Record Surrounding Log
-	log.Activity(ctxWithTimeout).Info(h.externalCallLog(logData))
+	log.Activity(requestCtx).Info(h.externalCallLog(logData))
 
 	return &resp, nil
 }
