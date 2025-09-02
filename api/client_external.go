@@ -7,14 +7,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
+	"runtime"
 	"time"
 
 	"github.com/goravel/framework/facades"
 	"github.com/redis/go-redis/v9"
+	"github.com/spotlibs/go-lib/ctx"
 	"github.com/spotlibs/go-lib/databases"
+	"github.com/spotlibs/go-lib/log"
 )
 
 // NewHTTPClientExternal return HTTPClient implementer that also set some metadata header
@@ -45,7 +47,32 @@ type MapRoute struct {
 	MockURL string `json:"mock_url"`
 }
 
+type ClientExternalSurroundingLog struct {
+	AppName      string                 `json:"app_name"`
+	Path         string                 `json:"path"`
+	Host         string                 `json:"host"`
+	Url          string                 `json:"url"`
+	Request      SurroundingLogRequest  `json:"request"`
+	Response     SurroundingLogResponse `json:"response"`
+	ResponseTime time.Duration          `json:"response_time"`
+	MemoryUsage  uint64                 `json:"memory_usage"`
+}
+
+type SurroundingLogRequest struct {
+	Method string `json:"method"`
+	Header any    `json:"header"`
+}
+
+type SurroundingLogResponse struct {
+	HttpCode int `json:"http_code"`
+	Header   any `json:"header"`
+}
+
 func (h *httpClientExternal) Call(req *http.Request, timeouts ...time.Duration) (HTTPResponse, error) {
+	// Init
+	startTime := time.Now()
+	metadata := ctx.Get(req.Context())
+
 	// Set Timeout
 	reqTimeout := DEFAULT_TIMEOUT
 	if len(timeouts) > 0 {
@@ -91,7 +118,9 @@ func (h *httpClientExternal) Call(req *http.Request, timeouts ...time.Duration) 
 	defer func(Body io.ReadCloser) {
 		err = Body.Close()
 		if err != nil {
-			log.Printf("error closing response body: %v", err)
+			log.Runtime(ctxWithTimeout).Error(map[string]any{
+				"msg": fmt.Sprintf("error closing response body: %v", err),
+			})
 		}
 	}(res.Body)
 
@@ -100,6 +129,32 @@ func (h *httpClientExternal) Call(req *http.Request, timeouts ...time.Duration) 
 	resp.statusCode = res.StatusCode
 	resp.header = make(map[string][]string)
 	resp.header = res.Header
+
+	// Calculate elapsed time and memory usage
+	elapsed := time.Since(startTime)
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	// Populate ClientExternalSurroundingLog
+	logData := ClientExternalSurroundingLog{
+		AppName: facades.Config().GetString("APP_NAME"),
+		Path:    getIdentifierPath(metadata),
+		Host:    req.URL.Host,
+		Url:     req.URL.Path,
+		Request: SurroundingLogRequest{
+			Method: req.Method,
+			Header: req.Header,
+		},
+		Response: SurroundingLogResponse{
+			HttpCode: res.StatusCode,
+			Header:   res.Header,
+		},
+		ResponseTime: elapsed,
+		MemoryUsage:  m.Alloc,
+	}
+
+	// Record Surrounding Log
+	log.Activity(ctxWithTimeout).Info(h.externalCallLog(logData))
 
 	return &resp, nil
 }
@@ -127,4 +182,27 @@ func (h *httpClientExternal) checkMock(url string) (*MapRoute, error) {
 	}
 
 	return &mapRoute, nil
+}
+
+func getIdentifierPath(metadata ctx.Metadata) string {
+	if metadata.UrlPath != "" {
+		return metadata.UrlPath
+	}
+	if metadata.SignaturePath != "" {
+		return metadata.SignaturePath
+	}
+	return ""
+}
+
+func (h *httpClientExternal) externalCallLog(logData ClientExternalSurroundingLog) log.Map {
+	return log.Map{
+		"app_name":      logData.AppName,
+		"path":          logData.Path,
+		"host":          logData.Host,
+		"url":           logData.Url,
+		"request":       logData.Request,
+		"response":      logData.Response,
+		"response_time": logData.ResponseTime.Milliseconds(),
+		"memory_usage":  logData.MemoryUsage,
+	}
 }
