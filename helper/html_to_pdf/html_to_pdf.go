@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/minio/minio-go/v7"
@@ -49,7 +51,7 @@ func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte,
 		return err
 	}
 	// log.Runtime(ctx).Info(log.Map{"message": parseFilePath(savepath)})
-	// exec.CommandContext(ctx, "mkdir", "-p", parseFilePath(savepath))
+	exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
 	if err := pdfg.WriteFile("/tmp" + savepath); err != nil {
 		return err
 	}
@@ -67,11 +69,48 @@ func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte,
 	return nil
 }
 
-func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []byte, savepath string) error {
+func parseFilePath(savepath string) string {
+	temp := strings.Split(savepath, "/")
+	return strings.Join(temp[:len(temp)-1], "/")
+}
+
+func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []byte, savepath string, nfspath string) error {
+	pdfg, err := wkhtmltopdf.NewPDFGenerator()
+	if err != nil {
+		return err
+	}
+	pdfg.PageSize.Set(wkhtmltopdf.PageSizeA4)
+	pdfg.Dpi.Set(600)
+	pdfg.NoCollate.Set(false)
+	pdfg.MarginTop.Set(0)
+	pdfg.MarginRight.Set(0)
+	pdfg.MarginBottom.Set(0)
+	pdfg.MarginLeft.Set(0)
+	pdfg.AddPage(wkhtmltopdf.NewPageReader(bytes.NewReader(content)))
+	if err := pdfg.CreateContext(ctx); err != nil {
+		return err
+	}
+	exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
+	if err := pdfg.WriteFile("/tmp" + savepath); err != nil {
+		return err
+	}
+	upInfo, err := minioClient.FPutObject(ctx,
+		os.Getenv("MINIO_BUCKET"),
+		savepath,
+		"/tmp"+savepath,
+		minio.PutObjectOptions{ContentType: "application/pdf"},
+	)
+	if err != nil {
+		return err
+	}
+	fmt.Println("file uploaded: ", upInfo.ChecksumSHA256)
+	exec.CommandContext(ctx, "mv", "/tmp"+savepath, nfspath+savepath).Run()
+	fmt.Println("file moved to NFS")
+
 	return nil
 }
 
-func NFSExport(ctx context.Context, content []byte, savepath string) error {
+func NFSExport(ctx context.Context, content []byte, savepath string, nfspath string) error {
 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		return err
@@ -88,5 +127,5 @@ func NFSExport(ctx context.Context, content []byte, savepath string) error {
 		return err
 	}
 
-	return pdfg.WriteFile(savepath)
+	return pdfg.WriteFile(nfspath + savepath)
 }
