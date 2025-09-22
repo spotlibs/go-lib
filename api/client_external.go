@@ -1,6 +1,7 @@
 package api
 
 import (
+	"compress/gzip"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -124,8 +125,18 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 		}
 	}(res.Body)
 
+	var bodyReader io.Reader = res.Body
+	if res.Header.Get("Content-Encoding") == "gzip" {
+		gzipReader, err := gzip.NewReader(res.Body)
+		if err != nil {
+			return nil, fmt.Errorf("gzip decompress error: %w", err)
+		}
+		defer gzipReader.Close()
+		bodyReader = gzipReader
+	}
+
 	// Responses
-	resp.body, _ = io.ReadAll(res.Body)
+	resp.body, _ = io.ReadAll(bodyReader)
 	resp.statusCode = res.StatusCode
 	resp.header = make(map[string][]string)
 	resp.header = res.Header
