@@ -60,6 +60,8 @@ func WithErr(e error) StdOpt {
 func WithErrThirdParty(e error) StdOpt {
 	return func(s *Std) {
 		s.ResponseCode = stderr.ERROR_CODE_THIRD_PARTY
-		s.ResponseDesc = "Terjadi kesalahan, mohon coba beberapa saat lagi yaa... "
+		if e.Error() == "" {
+			s.ResponseDesc = "Terjadi kesalahan, mohon coba beberapa saat lagi yaa... "
+		}
 	}
 }
