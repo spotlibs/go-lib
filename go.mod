@@ -1,11 +1,12 @@
 module github.com/spotlibs/go-lib
 
-go 1.23
+go 1.23.0
 
 require (
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.9.3
 	github.com/bytedance/sonic v1.12.8
 	github.com/goravel/framework v1.14.9
+	github.com/minio/minio-go/v7 v7.0.95
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
