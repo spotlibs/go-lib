@@ -51,7 +51,10 @@ func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte,
 		return err
 	}
 	// log.Runtime(ctx).Info(log.Map{"message": parseFilePath(savepath)})
-	exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
+	err = exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
+	if err != nil {
+		return err
+	}
 	if err := pdfg.WriteFile("/tmp" + savepath); err != nil {
 		return err
 	}
@@ -90,7 +93,10 @@ func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []by
 	if err := pdfg.CreateContext(ctx); err != nil {
 		return err
 	}
-	exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
+	err = exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
+	if err != nil {
+		return err
+	}
 	if err := pdfg.WriteFile("/tmp" + savepath); err != nil {
 		return err
 	}
@@ -104,7 +110,10 @@ func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []by
 		return err
 	}
 	fmt.Println("file uploaded: ", upInfo.ChecksumSHA256)
-	exec.CommandContext(ctx, "mv", "/tmp"+savepath, nfspath+savepath).Run()
+	err = exec.CommandContext(ctx, "mv", "/tmp"+savepath, nfspath+savepath).Run()
+	if err != nil {
+		return err
+	}
 	fmt.Println("file moved to NFS")
 
 	return nil

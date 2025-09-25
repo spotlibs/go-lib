@@ -8,6 +8,7 @@ require (
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.9.3
 	github.com/bytedance/sonic v1.12.8
 	github.com/goravel/framework v1.14.9
+	github.com/minio/minio-go/v7 v7.0.95
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
 )
@@ -106,7 +107,6 @@ require (
 	github.com/microsoft/go-mssqldb v1.8.0 // indirect
 	github.com/minio/crc64nvme v1.0.2 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
-	github.com/minio/minio-go/v7 v7.0.95 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
