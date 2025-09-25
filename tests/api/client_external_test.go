@@ -16,17 +16,35 @@ import (
 
 func TestMain(m *testing.M) {
 	// Set minimal required environment variables for tests
-	os.Setenv("APP_NAME", "spotlib-go-test")
-	os.Setenv("APP_ENV", "development")
-	os.Setenv("APP_KEY", "JzLRl2YHe1Ec7MCGqkAJ4byaF08uKLfs")
+	err := os.Setenv("APP_NAME", "spotlib-go-test")
+	if err != nil {
+		return
+	}
+	err = os.Setenv("APP_ENV", "development")
+	if err != nil {
+		return
+	}
+	err = os.Setenv("APP_KEY", "JzLRl2YHe1Ec7MCGqkAJ4byaF08uKLfs")
+	if err != nil {
+		return
+	}
 
 	// Run tests
 	code := m.Run()
 
 	// Cleanup
-	os.Unsetenv("APP_NAME")
-	os.Unsetenv("APP_ENV")
-	os.Unsetenv("APP_KEY")
+	err = os.Unsetenv("APP_NAME")
+	if err != nil {
+		return
+	}
+	err = os.Unsetenv("APP_ENV")
+	if err != nil {
+		return
+	}
+	err = os.Unsetenv("APP_KEY")
+	if err != nil {
+		return
+	}
 
 	os.Exit(code)
 }
@@ -36,7 +54,10 @@ func TestHTTPClientExternal_Call_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"message": "success"}`))
+		_, err := w.Write([]byte(`{"message": "success"}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -64,7 +85,10 @@ func TestHTTPClientExternal_Call_WithTimeout(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(100 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"message": "delayed"}`))
+		_, err := w.Write([]byte(`{"message": "delayed"}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -110,7 +134,10 @@ func TestHTTPClientExternal_Call_PostRequest(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`{"id": 123}`))
+		_, err := w.Write([]byte(`{"id": 123}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -138,7 +165,10 @@ func TestHTTPClientExternal_Call_DefaultHeaders(t *testing.T) {
 		assert.Equal(t, "gzip, deflate", r.Header.Get("Accept-Encoding"))
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"ok": true}`))
+		_, err := w.Write([]byte(`{"ok": true}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -161,7 +191,10 @@ func TestHTTPClientExternal_Call_CustomHeaders(t *testing.T) {
 		assert.Equal(t, "custom-agent", r.Header.Get("User-Agent"))
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`OK`))
+		_, err := w.Write([]byte(`OK`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -186,7 +219,10 @@ func TestResponse_Methods(t *testing.T) {
 		w.Header().Add("X-Custom-Header", "value2")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`{"test": true}`))
+		_, err := w.Write([]byte(`{"test": true}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -213,7 +249,10 @@ func TestToObject(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"name": "test", "id": 123}`))
+		_, err := w.Write([]byte(`{"name": "test", "id": 123}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -240,7 +279,10 @@ func TestToObject(t *testing.T) {
 func TestToObject_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`invalid json`))
+		_, err := w.Write([]byte(`invalid json`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
