@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"compress/gzip"
 	"context"
 	"crypto/tls"
@@ -62,6 +63,7 @@ type ClientExternalSurroundingLog struct {
 type SurroundingLogRequest struct {
 	Method string `json:"method"`
 	Header any    `json:"header"`
+	Body   any    `json:"body"`
 }
 
 type SurroundingLogResponse struct {
@@ -73,6 +75,25 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 	// Init
 	startTime := time.Now()
 	metadata := ctx.Get(req.Context())
+
+	// Read and store request body for logging
+	var requestBody []byte
+	var bodyDataLog interface{}
+	if req.Body != nil {
+		requestBody, _ = io.ReadAll(req.Body)
+		req.Body.Close()
+
+		// Try to parse as JSON for readable logs
+		var jsonBody interface{}
+		if json.Unmarshal(requestBody, &jsonBody) == nil {
+			bodyDataLog = jsonBody
+		} else {
+			bodyDataLog = string(requestBody)
+		}
+
+		// Restore body for actual HTTP call
+		req.Body = io.NopCloser(bytes.NewBuffer(requestBody))
+	}
 
 	// Set Timeout
 	reqTimeout := DEFAULT_TIMEOUT
@@ -155,6 +176,7 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 		Request: SurroundingLogRequest{
 			Method: req.Method,
 			Header: req.Header,
+			Body:   bodyDataLog,
 		},
 		Response: SurroundingLogResponse{
 			HttpCode: res.StatusCode,
