@@ -28,6 +28,10 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		return
 	}
+	err = os.Setenv("UNIT_TEST_RUNTIME", "true")
+	if err != nil {
+		return
+	}
 
 	// Run tests
 	code := m.Run()

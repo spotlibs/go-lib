@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
+	"slices"
 	"time"
 
 	"github.com/goravel/framework/facades"
@@ -193,7 +194,8 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 }
 
 func (h *httpClientExternal) checkMock(url string) (*MapRoute, error) {
-	if facades.Config().GetString("APP_ENV") == "production" {
+	disallowedEnv := []string{"production", "staging", "piloting"}
+	if slices.Contains(disallowedEnv, facades.Config().GetString("APP_ENV")) {
 		return nil, errors.New("cannot use mock in production environment")
 	}
 
