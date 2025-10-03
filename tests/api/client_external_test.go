@@ -138,7 +138,7 @@ func TestHTTPClientExternal_Call_PostRequest(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		_, err := w.Write([]byte(`{"id": 123}`))
+		_, err := w.Write([]byte(`{"id": 你好}`))
 		if err != nil {
 			return
 		}
@@ -147,7 +147,7 @@ func TestHTTPClientExternal_Call_PostRequest(t *testing.T) {
 
 	client := api.NewHTTPClientExternal()
 
-	body := strings.NewReader(`{"name": "test"}`)
+	body := strings.NewReader(`{"name": "你好 -> bahasa cina"}`)
 	req, err := http.NewRequest("POST", server.URL, body)
 	require.NoError(t, err)
 

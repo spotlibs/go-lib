@@ -70,6 +70,7 @@ type SurroundingLogRequest struct {
 type SurroundingLogResponse struct {
 	HttpCode int `json:"http_code"`
 	Header   any `json:"header"`
+	Body     any `json:"body"`
 }
 
 func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request, timeouts ...time.Duration) (HTTPResponse, error) {
@@ -182,13 +183,39 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 		Response: SurroundingLogResponse{
 			HttpCode: res.StatusCode,
 			Header:   res.Header,
+			Body:     string(resp.body),
 		},
 		ResponseTime: elapsed,
 		MemoryUsage:  m.Alloc,
 	}
 
+	const (
+		msgValidate  = "more than 5000 characters"
+		msgNotString = "not a string"
+	)
+
+	// Check Client Debug -> Response
+	bodyResponse, ok := logData.Response.Body.(string)
+	if !ok {
+		logData.Response.Body = msgNotString
+	}
+	if len(bodyResponse) > 5000 && facades.Config().GetString("CLIENT_DEBUG", "false") == "false" {
+		logData.Response.Body = msgValidate
+	}
+
+	// Check Client Debug -> Request
+	bodyRequest, ok := logData.Request.Body.(string)
+	if !ok {
+		logData.Request.Body = msgNotString
+	}
+	if len(bodyRequest) > 5000 && facades.Config().GetString("CLIENT_DEBUG", "false") == "false" {
+		logData.Request.Body = msgValidate
+	}
+
 	// Record Surrounding Log
 	log.Activity(requestCtx).Info(h.externalCallLog(logData))
+
+	//TODO -> Handle Log form-multipart
 
 	return &resp, nil
 }
