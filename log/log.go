@@ -51,6 +51,11 @@ type writer struct {
 }
 
 func (w *writer) Write(p []byte) (n int, err error) {
+	// Check Unit Test Env
+	unitTestVar := facades.Config().GetString("UNIT_TEST_RUNTIME", false)
+	if unitTestVar == "true" {
+		return 0, nil
+	}
 	// format incoming message from zap then pass it to the real writer
 	var m, mm Map
 	_ = sonic.ConfigStd.Unmarshal(p, &m)
@@ -107,6 +112,11 @@ type Map map[string]any
 // setupLog do setup and return io.WriteCloser that ready to use as target
 // output of logs.
 func setupLog(logType string) io.WriteCloser {
+	// Check Unit Test Env
+	unitTestVar := facades.Config().GetString("UNIT_TEST_RUNTIME", false)
+	if unitTestVar == "true" {
+		return nil
+	}
 	if output != nil {
 		return output
 	}

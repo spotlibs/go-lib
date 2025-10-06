@@ -2,14 +2,20 @@ package validation
 
 import (
 	"github.com/bytedance/sonic"
+	httpValidate "github.com/goravel/framework/contracts/validation"
 	"github.com/goravel/framework/facades"
 	"github.com/goravel/framework/validation"
 	"github.com/spotlibs/go-lib/stderr"
 )
 
 // ValidateRequest validate request data with given rules.
-func ValidateRequest[T any](rules map[string]string, data map[string]any, obj *T) error {
-	val, err := facades.Validation().Make(data, rules, validation.Messages(validationMessages))
+func ValidateRequest[T any](rules map[string]string, data map[string]any, obj *T, opts ...httpValidate.Option) error {
+	// If no options provided, use default validationMessages
+	if len(opts) == 0 {
+		opts = append(opts, validation.Messages(validationMessages))
+	}
+
+	val, err := facades.Validation().Make(data, rules, opts...)
 	if err != nil {
 		return stderr.ErrRuntime(err.Error())
 	}

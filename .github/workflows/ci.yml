@@ -12,6 +12,9 @@ jobs:
         with:
           go-version: 1.23
 
+      - name: Create directories
+        run: mkdir -p storage/logs
+
       - name: Test
         run: go test -v ./...
 
