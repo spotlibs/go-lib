@@ -52,7 +52,7 @@ func GetRedisClient() *redis.Client {
 			})
 		} else {
 			log.Runtime(ctx).Error(log.Map{
-				"msg": fmt.Sprintf("Redis connection established successfully"),
+				"msg": "Redis connection established successfully",
 			})
 		}
 	})
