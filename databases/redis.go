@@ -2,11 +2,13 @@ package databases
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/goravel/framework/facades"
 	"github.com/redis/go-redis/v9"
+	"github.com/spotlibs/go-lib/log"
 )
 
 var (
@@ -45,9 +47,13 @@ func GetRedisClient() *redis.Client {
 		defer cancel()
 
 		if err := RedisClient.Ping(ctx).Err(); err != nil {
-			facades.Log().Errorf("Redis connection failed: %v", err)
+			log.Runtime(ctx).Error(log.Map{
+				"msg": fmt.Sprintf("failed to ping redis: %s", err),
+			})
 		} else {
-			facades.Log().Info("Redis connection established successfully")
+			log.Runtime(ctx).Error(log.Map{
+				"msg": fmt.Sprintf("Redis connection established successfully"),
+			})
 		}
 	})
 	return RedisClient

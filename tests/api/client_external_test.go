@@ -156,7 +156,7 @@ func TestHTTPClientExternal_Call_PostRequest(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, resp.GetStatusCode())
-	assert.Contains(t, string(resp.GetBody()), "123")
+	assert.Contains(t, string(resp.GetBody()), "你好")
 }
 
 func TestHTTPClientExternal_Call_DefaultHeaders(t *testing.T) {
