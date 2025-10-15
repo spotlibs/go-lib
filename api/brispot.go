@@ -35,7 +35,9 @@ type httpClient struct {
 }
 
 func (h *httpClient) Call(req *http.Request, timeouts ...time.Duration) (HTTPResponse, error) {
-	ctx.SetHTTPRequestHeader(req)
+	if !ctx.ShouldSkipContextHeaders(req.Context()) {
+		ctx.SetHTTPRequestHeader(req)
+	}
 	reqTimeout := DEFAULT_TIMEOUT
 	if len(timeouts) > 0 {
 		reqTimeout = timeouts[0]

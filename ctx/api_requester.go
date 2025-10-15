@@ -1,6 +1,11 @@
 package ctx
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
+
+type skipHeaderKey struct{}
 
 func SetHTTPRequestHeader(r *http.Request) {
 	mt := Get(r.Context())
@@ -25,4 +30,13 @@ func SetHTTPRequestHeader(r *http.Request) {
 	r.Header.Set("X-Forwarded-For", mt.ForwardedFor)
 	r.Header.Set("Cache-Control", mt.CacheControl)
 	r.Header.Set("User-Agent", mt.UserAgent)
+}
+
+func WithSkipContextHeaders(ctx context.Context) context.Context {
+	return context.WithValue(ctx, skipHeaderKey{}, true)
+}
+
+func ShouldSkipContextHeaders(ctx context.Context) bool {
+	skip, _ := ctx.Value(skipHeaderKey{}).(bool)
+	return skip
 }
