@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"strings"
 )
 
 const (
@@ -69,12 +70,12 @@ func Encrypt(plain string) (string, error) {
 
 	// Combine IV + ciphertext
 	combined := append(iv, encrypted...)
-	return hex.EncodeToString(combined), nil
+	return strings.ToUpper(hex.EncodeToString(combined)), nil
 }
 
 func Decrypt(cipherHex string) (string, error) {
 	key := os.Getenv("SECURITY_KEY")
-	combined, err := hex.DecodeString(cipherHex)
+	combined, err := hex.DecodeString(strings.ToLower(cipherHex))
 	if err != nil {
 		return "", err
 	}
