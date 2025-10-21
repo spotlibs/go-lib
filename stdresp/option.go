@@ -1,9 +1,12 @@
 package stdresp
 
 import (
+	"encoding/json"
+	"regexp"
 	"strings"
 
 	"github.com/spotlibs/go-lib/debug"
+	"github.com/spotlibs/go-lib/security"
 	"github.com/spotlibs/go-lib/stderr"
 )
 
@@ -21,6 +24,13 @@ func WithDesc(desc string) StdOpt {
 func WithData(data any) StdOpt {
 	return func(s *Std) {
 		s.ResponseData = data
+	}
+}
+
+// WithMaskedData masks specified keys in the response data
+func WithMaskedData(keysToMask []string, data any) StdOpt {
+	return func(s *Std) {
+		s.ResponseData = maskData(keysToMask, data)
 	}
 }
 
@@ -64,6 +74,76 @@ func WithErrThirdParty(e error) StdOpt {
 			s.ResponseDesc = "Terjadi kesalahan, mohon coba beberapa saat lagi yaa... "
 		} else {
 			s.ResponseDesc = e.Error()
+		}
+	}
+}
+
+func maskData(keysToMask []string, data any) any {
+	if data == nil || len(keysToMask) == 0 {
+		return data
+	}
+
+	// Convert to JSON and back to get map structure
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return data
+	}
+
+	var result any
+	if err := json.Unmarshal(jsonBytes, &result); err != nil {
+		return data
+	}
+
+	// Compile patterns from keys
+	patterns := make([]*regexp.Regexp, 0, len(keysToMask))
+	for _, key := range keysToMask {
+		// Escape special regex chars and make case-insensitive
+		escaped := regexp.QuoteMeta(key)
+		pattern := regexp.MustCompile(`(?i)` + escaped)
+		patterns = append(patterns, pattern)
+	}
+
+	// Mask fields
+	if m, ok := result.(map[string]any); ok {
+		maskFieldsRecursive(m, patterns)
+		return m
+	}
+
+	return result
+}
+
+func maskFieldsRecursive(data map[string]any, patterns []*regexp.Regexp) {
+	for key, value := range data {
+		// Check if key matches any pattern
+		shouldMask := false
+		for _, pattern := range patterns {
+			if pattern.MatchString(key) {
+				shouldMask = true
+				break
+			}
+		}
+
+		if shouldMask {
+			// Encrypt string values
+			if str, ok := value.(string); ok && str != "" {
+				encrypted, err := security.Encrypt(str)
+				if err != nil {
+					// Fallback to masking if encryption fails
+					data[key] = "***"
+				} else {
+					data[key] = encrypted
+				}
+			}
+		} else if nestedMap, ok := value.(map[string]any); ok {
+			// Recursively mask nested maps
+			maskFieldsRecursive(nestedMap, patterns)
+		} else if arr, ok := value.([]any); ok {
+			// Handle arrays
+			for _, item := range arr {
+				if nestedMap, ok := item.(map[string]any); ok {
+					maskFieldsRecursive(nestedMap, patterns)
+				}
+			}
 		}
 	}
 }
