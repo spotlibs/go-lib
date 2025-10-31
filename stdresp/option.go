@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/goravel/framework/facades"
 	"github.com/spotlibs/go-lib/debug"
 	"github.com/spotlibs/go-lib/security"
 	"github.com/spotlibs/go-lib/stderr"
@@ -23,7 +24,26 @@ func WithDesc(desc string) StdOpt {
 // WithData embed given data object to the standard response as field `responseData`.
 func WithData(data any) StdOpt {
 	return func(s *Std) {
-		s.ResponseData = data
+		encryptionMode := facades.Config().GetString("ENCRYPTION_MODE")
+		encryptionModeUpper := strings.ToUpper(encryptionMode)
+
+		switch {
+		case encryptionMode == "":
+			s.ResponseData = data
+		case encryptionModeUpper == "DISABLED":
+			s.ResponseData = data
+		case encryptionModeUpper == "ENABLED":
+			keyToEncryptStr := facades.Config().GetString("KEY_TO_ENCRYPT")
+			var keyToEncrypt []string
+			if keyToEncryptStr != "" {
+				keyToEncrypt = strings.Split(keyToEncryptStr, ",")
+			}
+			s.ResponseData = maskData(keyToEncrypt, data)
+		default:
+			s.ResponseCode = stderr.ERROR_CODE_SYSTEM
+			s.ResponseDesc = "Invalid ENCRYPTION_MODE: must be empty, 'ENABLED', or 'DISABLED'"
+			s.ResponseData = nil
+		}
 	}
 }
 
