@@ -24,15 +24,13 @@ func WithDesc(desc string) StdOpt {
 // WithData embed given data object to the standard response as field `responseData`.
 func WithData(data any) StdOpt {
 	return func(s *Std) {
-		encryptionMode := facades.Config().GetString("ENCRYPTION_MODE")
-		encryptionModeUpper := strings.ToUpper(encryptionMode)
 
-		switch {
-		case encryptionMode == "":
+		switch strings.ToUpper(facades.Config().GetString("ENCRYPTION_MODE", "")) {
+		case "":
 			s.ResponseData = data
-		case encryptionModeUpper == "DISABLED":
+		case "DISABLED":
 			s.ResponseData = data
-		case encryptionModeUpper == "ENABLED":
+		case "ENABLED":
 			keyToEncryptStr := facades.Config().GetString("KEY_TO_ENCRYPT")
 			var keyToEncrypt []string
 			if keyToEncryptStr != "" {
