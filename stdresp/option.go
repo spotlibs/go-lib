@@ -66,7 +66,11 @@ func WithErr(e error) StdOpt {
 
 			// do trim space in case stacktrace is empty
 			if (s.ResponseCode == stderr.ERROR_CODE_SYSTEM && debug.IsOn()) || s.ResponseCode != stderr.ERROR_CODE_SYSTEM {
-				s.ResponseDesc = strings.TrimSpace(stderr.GetMsg(e) + " " + stderr.GetStackTrace(e))
+				if facades.Config().GetBool("APP_DEBUG") {
+					s.ResponseDesc = strings.TrimSpace(stderr.GetMsg(e) + " " + stderr.GetStackTrace(e))
+				} else {
+					s.ResponseDesc = strings.TrimSpace(stderr.GetMsg(e))
+				}
 			}
 
 			// also if any, get the validation message too

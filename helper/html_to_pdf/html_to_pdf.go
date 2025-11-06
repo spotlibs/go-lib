@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/minio/minio-go/v7"
@@ -50,18 +48,11 @@ func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte,
 	if err := pdfg.CreateContext(ctx); err != nil {
 		return err
 	}
-	// log.Runtime(ctx).Info(log.Map{"message": parseFilePath(savepath)})
-	err = exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
-	if err != nil {
-		return err
-	}
-	if err := pdfg.WriteFile("/tmp" + savepath); err != nil {
-		return err
-	}
-	upInfo, err := minioClient.FPutObject(ctx,
+	upInfo, err := minioClient.PutObject(ctx,
 		os.Getenv("MINIO_BUCKET"),
 		savepath,
-		"/tmp"+savepath,
+		bytes.NewBuffer(pdfg.Bytes()),
+		int64(len(pdfg.Bytes())),
 		minio.PutObjectOptions{ContentType: "application/pdf"},
 	)
 	if err != nil {
@@ -70,11 +61,6 @@ func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte,
 	fmt.Println("file uploaded: ", upInfo.ChecksumSHA256)
 
 	return nil
-}
-
-func parseFilePath(savepath string) string {
-	temp := strings.Split(savepath, "/")
-	return strings.Join(temp[:len(temp)-1], "/")
 }
 
 func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []byte, savepath string, nfspath string) error {
@@ -93,28 +79,21 @@ func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []by
 	if err := pdfg.CreateContext(ctx); err != nil {
 		return err
 	}
-	err = exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
-	if err != nil {
-		return err
-	}
-	if err := pdfg.WriteFile("/tmp" + savepath); err != nil {
-		return err
-	}
-	upInfo, err := minioClient.FPutObject(ctx,
+	upInfo, err := minioClient.PutObject(ctx,
 		os.Getenv("MINIO_BUCKET"),
 		savepath,
-		"/tmp"+savepath,
+		bytes.NewBuffer(pdfg.Bytes()),
+		int64(len(pdfg.Bytes())),
 		minio.PutObjectOptions{ContentType: "application/pdf"},
 	)
 	if err != nil {
 		return err
 	}
 	fmt.Println("file uploaded: ", upInfo.ChecksumSHA256)
-	err = exec.CommandContext(ctx, "mv", "/tmp"+savepath, nfspath+savepath).Run()
-	if err != nil {
+	if err := pdfg.WriteFile(nfspath + savepath); err != nil {
 		return err
 	}
-	fmt.Println("file moved to NFS")
+	fmt.Println("file written to NFS")
 
 	return nil
 }
