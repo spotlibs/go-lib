@@ -88,7 +88,11 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 		// Try to parse as JSON for readable logs
 		var jsonBody interface{}
 		if json.Unmarshal(requestBody, &jsonBody) == nil {
-			bodyDataLog = jsonBody
+			if jsonStr, err := json.Marshal(jsonBody); err == nil {
+				bodyDataLog = string(jsonStr)
+			} else {
+				bodyDataLog = string(requestBody)
+			}
 		} else {
 			bodyDataLog = string(requestBody)
 		}
