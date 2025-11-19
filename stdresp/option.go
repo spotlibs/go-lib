@@ -96,6 +96,94 @@ func WithErrThirdParty(e error) StdOpt {
 	}
 }
 
+func WithErrNotFound(e error) StdOpt {
+	return func(s *Std) {
+		s.ResponseCode = stderr.ERROR_DESC_DATA_NOT_FOUND
+		if e.Error() == "" {
+			s.ResponseDesc = "Data tidak ditemukan"
+		} else {
+			s.ResponseDesc = e.Error()
+		}
+	}
+}
+
+func WithErrAccess(e error) StdOpt {
+	return func(s *Std) {
+		s.ResponseCode = stderr.ERROR_CODE_ACCESS_PERMISSION
+		if e.Error() == "" {
+			s.ResponseDesc = "Akses tidak diijinkan"
+		} else {
+			s.ResponseDesc = e.Error()
+		}
+	}
+}
+
+func WithErrHeader(e error) StdOpt {
+	return func(s *Std) {
+		s.ResponseCode = stderr.ERROR_CODE_INVALID_HEADER
+		if e.Error() == "" {
+			s.ResponseDesc = "Header Request tidak valid"
+		} else {
+			s.ResponseDesc = e.Error()
+		}
+	}
+}
+
+func WithErrInvalidRule(e error) StdOpt {
+	return func(s *Std) {
+		s.ResponseCode = stderr.ERROR_CODE_INVALID_RULE
+		if e.Error() == "" {
+			s.ResponseDesc = "Validasi tidak terpenuhi"
+		} else {
+			s.ResponseDesc = e.Error()
+		}
+	}
+}
+
+func WithErrParameter(e error) StdOpt {
+	return func(s *Std) {
+		s.ResponseCode = stderr.ERROR_CODE_PARAMETER
+		if e.Error() == "" {
+			s.ResponseDesc = "Parameter tidak sesuai"
+		} else {
+			s.ResponseDesc = e.Error()
+		}
+	}
+}
+
+func WithErrRuntime(e error) StdOpt {
+	return func(s *Std) {
+		s.ResponseCode = stderr.ERROR_CODE_SYSTEM
+		if e.Error() == "" {
+			s.ResponseDesc = "Runtime error happens"
+		} else {
+			s.ResponseDesc = e.Error()
+		}
+	}
+}
+
+func WithErrUnsupport(e error) StdOpt {
+	return func(s *Std) {
+		s.ResponseCode = stderr.ERROR_CODE_UNSUPPORTED
+		if e.Error() == "" {
+			s.ResponseDesc = "Tidak disupport"
+		} else {
+			s.ResponseDesc = e.Error()
+		}
+	}
+}
+
+func WithErrWaiting(e error) StdOpt {
+	return func(s *Std) {
+		s.ResponseCode = stderr.ERROR_CODE_WAITING_STATUS
+		if e.Error() == "" {
+			s.ResponseDesc = "Masih proses harap tunggu"
+		} else {
+			s.ResponseDesc = e.Error()
+		}
+	}
+}
+
 func maskData(keysToMask []string, data any) any {
 	if data == nil || len(keysToMask) == 0 {
 		return data
