@@ -47,7 +47,6 @@ func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte,
 	if len(options) > 0 {
 		option = options[0]
 	}
-	setDefaultMargin(&option)
 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		return err
@@ -62,7 +61,6 @@ func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte,
 	page := wkhtmltopdf.NewPageReader(bytes.NewReader(content))
 	page.HeaderHTML.Set(option.HeaderPath)
 	page.FooterHTML.Set(option.FooterPath)
-	page.FooterRight.Set("[page]")
 	pdfg.AddPage(page)
 	if err := pdfg.CreateContext(ctx); err != nil {
 		return err
@@ -87,7 +85,6 @@ func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []by
 	if len(options) > 0 {
 		option = options[0]
 	}
-	setDefaultMargin(&option)
 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		return err
@@ -131,7 +128,6 @@ func NFSExport(ctx context.Context, content []byte, savepath string, nfspath str
 	if len(options) > 0 {
 		option = options[0]
 	}
-	setDefaultMargin(&option)
 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		return err
@@ -153,11 +149,4 @@ func NFSExport(ctx context.Context, content []byte, savepath string, nfspath str
 	}
 
 	return pdfg.WriteFile(nfspath + savepath)
-}
-
-func setDefaultMargin(option *PDFOptions) {
-	option.MarginBottom = 0
-	option.MarginTop = 0
-	option.MarginLeft = 0
-	option.MarginRight = 0
 }
