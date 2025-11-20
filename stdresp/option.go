@@ -98,7 +98,7 @@ func WithErrThirdParty(e error) StdOpt {
 
 func WithErrNotFound(e error) StdOpt {
 	return func(s *Std) {
-		s.ResponseCode = stderr.ERROR_DESC_DATA_NOT_FOUND
+		s.ResponseCode = stderr.ERROR_CODE_DATA_NOT_FOUND
 		if e.Error() == "" {
 			s.ResponseDesc = "Data tidak ditemukan"
 		} else {
