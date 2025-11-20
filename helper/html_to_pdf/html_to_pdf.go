@@ -156,8 +156,8 @@ func NFSExport(ctx context.Context, content []byte, savepath string, nfspath str
 }
 
 func setDefaultMargin(option *PDFOptions) {
-	option.MarginBottom = 10
-	option.MarginTop = 10
-	option.MarginLeft = 10
-	option.MarginRight = 10
+	option.MarginBottom = 0
+	option.MarginTop = 0
+	option.MarginLeft = 0
+	option.MarginRight = 0
 }
