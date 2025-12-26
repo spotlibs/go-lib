@@ -279,13 +279,13 @@ func getIdentifierPath(metadata ctx.Metadata) string {
 
 func (h *httpClientExternal) externalCallLog(logData ClientExternalSurroundingLog) log.Map {
 	return log.Map{
-		"app_name":      logData.AppName,
-		"path":          logData.Path,
-		"host":          logData.Host,
-		"url":           logData.Url,
-		"request":       logData.Request,
-		"response":      logData.Response,
-		"response_time": logData.ResponseTime.Milliseconds(),
-		"memory_usage":  logData.MemoryUsage,
+		"app_name":     logData.AppName,
+		"path":         logData.Path,
+		"host":         logData.Host,
+		"url":          logData.Url,
+		"request":      logData.Request,
+		"response":     logData.Response,
+		"responseTime": logData.ResponseTime.Milliseconds(),
+		"memoryUsage":  logData.MemoryUsage,
 	}
 }
