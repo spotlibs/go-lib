@@ -5,12 +5,20 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/minio/minio-go/v7"
 )
+
+type PDFOptions struct {
+	MarginTop    uint
+	MarginBottom uint
+	MarginLeft   uint
+	MarginRight  uint
+	PaddingLeft  uint
+	HeaderPath   string
+	FooterPath   string
+}
 
 func ConvertFromURL(ctx context.Context, url, savepath string) error {
 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
@@ -34,7 +42,11 @@ func ConvertFromURL(ctx context.Context, url, savepath string) error {
 	return pdfg.WriteFile(savepath)
 }
 
-func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte, savepath string) error {
+func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte, savepath string, options ...PDFOptions) error {
+	var option PDFOptions
+	if len(options) > 0 {
+		option = options[0]
+	}
 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		return err
@@ -42,26 +54,22 @@ func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte,
 	pdfg.PageSize.Set(wkhtmltopdf.PageSizeA4)
 	pdfg.Dpi.Set(600)
 	pdfg.NoCollate.Set(false)
-	pdfg.MarginTop.Set(0)
-	pdfg.MarginRight.Set(0)
-	pdfg.MarginBottom.Set(0)
-	pdfg.MarginLeft.Set(0)
-	pdfg.AddPage(wkhtmltopdf.NewPageReader(bytes.NewReader(content)))
+	pdfg.MarginTop.Set(option.MarginTop)
+	pdfg.MarginRight.Set(option.MarginRight)
+	pdfg.MarginBottom.Set(option.MarginBottom)
+	pdfg.MarginLeft.Set(option.MarginLeft)
+	page := wkhtmltopdf.NewPageReader(bytes.NewReader(content))
+	page.HeaderHTML.Set(option.HeaderPath)
+	page.FooterHTML.Set(option.FooterPath)
+	pdfg.AddPage(page)
 	if err := pdfg.CreateContext(ctx); err != nil {
 		return err
 	}
-	// log.Runtime(ctx).Info(log.Map{"message": parseFilePath(savepath)})
-	err = exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
-	if err != nil {
-		return err
-	}
-	if err := pdfg.WriteFile("/tmp" + savepath); err != nil {
-		return err
-	}
-	upInfo, err := minioClient.FPutObject(ctx,
+	upInfo, err := minioClient.PutObject(ctx,
 		os.Getenv("MINIO_BUCKET"),
 		savepath,
-		"/tmp"+savepath,
+		bytes.NewBuffer(pdfg.Bytes()),
+		int64(len(pdfg.Bytes())),
 		minio.PutObjectOptions{ContentType: "application/pdf"},
 	)
 	if err != nil {
@@ -72,12 +80,11 @@ func MinioExport(ctx context.Context, minioClient *minio.Client, content []byte,
 	return nil
 }
 
-func parseFilePath(savepath string) string {
-	temp := strings.Split(savepath, "/")
-	return strings.Join(temp[:len(temp)-1], "/")
-}
-
-func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []byte, savepath string, nfspath string) error {
+func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []byte, savepath string, nfspath string, options ...PDFOptions) error {
+	var option PDFOptions
+	if len(options) > 0 {
+		option = options[0]
+	}
 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		return err
@@ -85,41 +92,42 @@ func NFSMinioExport(ctx context.Context, minioClient *minio.Client, content []by
 	pdfg.PageSize.Set(wkhtmltopdf.PageSizeA4)
 	pdfg.Dpi.Set(600)
 	pdfg.NoCollate.Set(false)
-	pdfg.MarginTop.Set(0)
-	pdfg.MarginRight.Set(0)
-	pdfg.MarginBottom.Set(0)
-	pdfg.MarginLeft.Set(0)
-	pdfg.AddPage(wkhtmltopdf.NewPageReader(bytes.NewReader(content)))
+	pdfg.MarginTop.Set(option.MarginTop)
+	pdfg.MarginRight.Set(option.MarginRight)
+	pdfg.MarginBottom.Set(option.MarginBottom)
+	pdfg.MarginLeft.Set(option.MarginLeft)
+	page := wkhtmltopdf.NewPageReader(bytes.NewReader(content))
+	page.HeaderHTML.Set(option.HeaderPath)
+	page.FooterHTML.Set(option.FooterPath)
+	page.FooterRight.Set("[page]")
+	pdfg.AddPage(page)
 	if err := pdfg.CreateContext(ctx); err != nil {
 		return err
 	}
-	err = exec.CommandContext(ctx, "mkdir", "-p", "/tmp"+parseFilePath(savepath)).Run()
-	if err != nil {
-		return err
-	}
-	if err := pdfg.WriteFile("/tmp" + savepath); err != nil {
-		return err
-	}
-	upInfo, err := minioClient.FPutObject(ctx,
+	upInfo, err := minioClient.PutObject(ctx,
 		os.Getenv("MINIO_BUCKET"),
 		savepath,
-		"/tmp"+savepath,
+		bytes.NewBuffer(pdfg.Bytes()),
+		int64(len(pdfg.Bytes())),
 		minio.PutObjectOptions{ContentType: "application/pdf"},
 	)
 	if err != nil {
 		return err
 	}
 	fmt.Println("file uploaded: ", upInfo.ChecksumSHA256)
-	err = exec.CommandContext(ctx, "mv", "/tmp"+savepath, nfspath+savepath).Run()
-	if err != nil {
+	if err := pdfg.WriteFile(nfspath + savepath); err != nil {
 		return err
 	}
-	fmt.Println("file moved to NFS")
+	fmt.Println("file written to NFS")
 
 	return nil
 }
 
-func NFSExport(ctx context.Context, content []byte, savepath string, nfspath string) error {
+func NFSExport(ctx context.Context, content []byte, savepath string, nfspath string, options ...PDFOptions) error {
+	var option PDFOptions
+	if len(options) > 0 {
+		option = options[0]
+	}
 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		return err
@@ -127,11 +135,15 @@ func NFSExport(ctx context.Context, content []byte, savepath string, nfspath str
 	pdfg.PageSize.Set(wkhtmltopdf.PageSizeA4)
 	pdfg.Dpi.Set(600)
 	pdfg.NoCollate.Set(false)
-	pdfg.MarginTop.Set(0)
-	pdfg.MarginRight.Set(0)
-	pdfg.MarginBottom.Set(0)
-	pdfg.MarginLeft.Set(0)
-	pdfg.AddPage(wkhtmltopdf.NewPageReader(bytes.NewReader(content)))
+	pdfg.MarginTop.Set(option.MarginTop)
+	pdfg.MarginRight.Set(option.MarginRight)
+	pdfg.MarginBottom.Set(option.MarginBottom)
+	pdfg.MarginLeft.Set(option.MarginLeft)
+	page := wkhtmltopdf.NewPageReader(bytes.NewReader(content))
+	page.HeaderHTML.Set(option.HeaderPath)
+	page.FooterHTML.Set(option.FooterPath)
+	page.FooterRight.Set("[page]")
+	pdfg.AddPage(page)
 	if err := pdfg.CreateContext(ctx); err != nil {
 		return err
 	}
