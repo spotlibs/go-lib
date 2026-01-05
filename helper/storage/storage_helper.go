@@ -22,7 +22,18 @@ const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 type storageHelper struct {
 	minioClient *minio.Client
 }
-type StorageHelper interface{}
+type StorageHelper interface {
+	MinioUpload(ctx context.Context, file *filesystem.File, dirpath string) error
+	MinioTemporaryUrl(ctx context.Context, filepath string) (string, error)
+	MinioMove(ctx context.Context, srcPath string, destPath string) error
+	MinioCopy(ctx context.Context, srcPath string, destPath string) error
+	MinioDelete(ctx context.Context, filepath string) error
+	NFSUpload(ctx context.Context, file *filesystem.File, dirpath string) error
+	NFSSecurelinkGenerate(ctx context.Context, filepath string) (string, error)
+	NFSDelete(ctx context.Context, filepath string) error
+	NFSMove(ctx context.Context, srcPath string, destPath string) error
+	NFSCopy(ctx context.Context, srcPath string, destPath string) error
+}
 
 func NewStorageHelper(minioClient *minio.Client) StorageHelper {
 	return &storageHelper{
