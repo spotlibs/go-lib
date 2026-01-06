@@ -10,8 +10,8 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/goravel/framework/contracts/filesystem"
 	"github.com/goravel/framework/facades"
-	"github.com/goravel/framework/filesystem"
 	"github.com/minio/minio-go/v7"
 	spotlibsCtx "github.com/spotlibs/go-lib/ctx"
 	"github.com/spotlibs/go-lib/log"
@@ -23,12 +23,12 @@ type storageHelper struct {
 	minioClient *minio.Client
 }
 type StorageHelper interface {
-	MinioUpload(ctx context.Context, file *filesystem.File, dirpath string) error
+	MinioUpload(ctx context.Context, file filesystem.File, dirpath string) error
 	MinioTemporaryUrl(ctx context.Context, filepath string) (string, error)
 	MinioMove(ctx context.Context, srcPath string, destPath string) error
 	MinioCopy(ctx context.Context, srcPath string, destPath string) error
 	MinioDelete(ctx context.Context, filepath string) error
-	NFSUpload(ctx context.Context, file *filesystem.File, dirpath string) error
+	NFSUpload(ctx context.Context, file filesystem.File, dirpath string) error
 	NFSSecurelinkGenerate(ctx context.Context, filepath string) (string, error)
 	NFSDelete(ctx context.Context, filepath string) error
 	NFSMove(ctx context.Context, srcPath string, destPath string) error
@@ -44,7 +44,7 @@ func NewStorageHelper(minioClient *minio.Client) StorageHelper {
 // Upload Goravel filesystem.File to MinIO
 // dirpath example: "2025/12/25/Documents"
 // logging to runtime info
-func (h *storageHelper) MinioUpload(ctx context.Context, file *filesystem.File, dirpath string) error {
+func (h *storageHelper) MinioUpload(ctx context.Context, file filesystem.File, dirpath string) error {
 	filename := file.GetClientOriginalName()
 	extension := file.GetClientOriginalExtension()
 	b, err := os.ReadFile(file.File())
@@ -155,7 +155,7 @@ func (h *storageHelper) MinioDelete(ctx context.Context, filepath string) error 
 	)
 	return err
 }
-func (h *storageHelper) NFSUpload(ctx context.Context, file *filesystem.File, dirpath string) error {
+func (h *storageHelper) NFSUpload(ctx context.Context, file filesystem.File, dirpath string) error {
 	err := checkDir(ctx, dirpath)
 	if err != nil {
 		return err
