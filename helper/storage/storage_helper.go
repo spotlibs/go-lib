@@ -185,18 +185,8 @@ func (h *nfsHelper) Upload(ctx context.Context, file filesystem.File, dirpath st
 			return err
 		}
 	}
-	path, err := file.Store("tempfiles")
+	_, err = file.Store(dirpath)
 	if err != nil {
-		return err
-	}
-	defer exec.CommandContext(ctx, "rm", path).Run()
-	destPath := dirpath + "/" + file.File()
-	if err = exec.CommandContext(ctx, "mv", path, destPath).Run(); err != nil {
-		log.Runtime(ctx).Error(log.Map{
-			"message":  "Failed to move file to NFS directory",
-			"destPath": destPath,
-			"error":    err.Error(),
-		})
 		return err
 	}
 	return nil
