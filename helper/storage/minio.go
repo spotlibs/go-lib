@@ -15,8 +15,7 @@ import (
 )
 
 func ConfigureMinio(ctx context.Context, diskConfig string) *minioHelper {
-	configMap := facades.Config().Get("filesystems.disks." + diskConfig).(map[string]any)
-	diskMap, ok := configMap[diskConfig].(map[string]any)
+	configMap, ok := facades.Config().Get("filesystems.disks." + diskConfig).(map[string]any)
 	if !ok {
 		log.Runtime(ctx).Error(log.Map{
 			"message":    "MinIO client configuration not found",
@@ -27,14 +26,14 @@ func ConfigureMinio(ctx context.Context, diskConfig string) *minioHelper {
 	minioClient := facades.Config().Get(diskConfig + ".client").(*minio.Client)
 	if minioClient == nil {
 		minioClient, err := minio.New(
-			diskMap["endpoint"].(string),
+			configMap["endpoint"].(string),
 			&minio.Options{
 				Creds: credentials.NewStaticV4(
-					diskMap["accessKey"].(string),
-					diskMap["secretKey"].(string),
+					configMap["accessKey"].(string),
+					configMap["secretKey"].(string),
 					"",
 				),
-				Secure: diskMap["secure"].(bool),
+				Secure: configMap["secure"].(bool),
 			},
 		)
 		if err != nil {
@@ -46,9 +45,9 @@ func ConfigureMinio(ctx context.Context, diskConfig string) *minioHelper {
 			return &minioHelper{err: err}
 		}
 		facades.Config().Add(diskConfig+".client", minioClient) // Cache the client for future use
-		return &minioHelper{minioClient: minioClient, bucketName: diskMap["bucketName"].(string)}
+		return &minioHelper{minioClient: minioClient, bucketName: configMap["bucketName"].(string)}
 	}
-	return &minioHelper{minioClient: minioClient, bucketName: diskMap["bucketName"].(string)}
+	return &minioHelper{minioClient: minioClient, bucketName: configMap["bucketName"].(string)}
 }
 
 func (h *minioHelper) Upload(ctx context.Context, file filesystem.File, dirpath string) error {
