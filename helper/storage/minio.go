@@ -22,8 +22,8 @@ func ConfigureMinio(ctx context.Context, diskConfig string) *minioHelper {
 		})
 		return &minioHelper{err: errors.New("MinIO client configuration not found")}
 	}
-	minioClient := facades.Config().Get(diskConfig + ".client").(*minio.Client)
-	if minioClient == nil {
+	minioClient, ok := facades.Config().Get(diskConfig + ".client").(*minio.Client)
+	if !ok || minioClient == nil {
 		minioClient, err := minio.New(
 			configMap["endpoint"].(string),
 			&minio.Options{
