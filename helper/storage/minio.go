@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"errors"
-	"os/exec"
 	"time"
 
 	"github.com/goravel/framework/contracts/filesystem"
@@ -29,8 +28,8 @@ func ConfigureMinio(ctx context.Context, diskConfig string) *minioHelper {
 			configMap["endpoint"].(string),
 			&minio.Options{
 				Creds: credentials.NewStaticV4(
-					configMap["accessKey"].(string),
-					configMap["secretKey"].(string),
+					configMap["access_key"].(string),
+					configMap["secret_key"].(string),
 					"",
 				),
 				Secure: configMap["secure"].(bool),
@@ -45,20 +44,15 @@ func ConfigureMinio(ctx context.Context, diskConfig string) *minioHelper {
 			return &minioHelper{err: err}
 		}
 		facades.Config().Add(diskConfig+".client", minioClient) // Cache the client for future use
-		return &minioHelper{minioClient: minioClient, bucketName: configMap["bucketName"].(string)}
+		return &minioHelper{minioClient: minioClient, bucketName: configMap["bucket_name"].(string)}
 	}
-	return &minioHelper{minioClient: minioClient, bucketName: configMap["bucketName"].(string)}
+	return &minioHelper{minioClient: minioClient, bucketName: configMap["bucket_name"].(string)}
 }
 
 func (h *minioHelper) Upload(ctx context.Context, file filesystem.File, dirpath string) error {
 	if h.err != nil {
 		return h.err
 	}
-	path, err := file.Store("tempfiles")
-	if err != nil {
-		return err
-	}
-	defer exec.CommandContext(ctx, "rm", path).Run()
 	ctxSpotlibs := spotlibsCtx.Get(ctx)
 	identifier := ctxSpotlibs.ReqId
 	if identifier == "" {
@@ -67,8 +61,8 @@ func (h *minioHelper) Upload(ctx context.Context, file filesystem.File, dirpath 
 	info, err := h.minioClient.FPutObject(
 		ctx,
 		h.bucketName,
+		dirpath+"/"+file.GetClientOriginalName(),
 		file.File(),
-		path,
 		minio.PutObjectOptions{
 			UserMetadata: map[string]string{
 				"original-filename": file.File(),
