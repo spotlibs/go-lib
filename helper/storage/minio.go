@@ -164,7 +164,7 @@ func (h *minioHelper) Securelink(ctx context.Context, filepath string) (string, 
 		ctx,
 		h.bucketName,
 		filepath,
-		time.Duration(facades.Config().GetInt("MINIO_EXPIRED_URL", 600)),
+		time.Second*time.Duration(facades.Config().GetInt("MINIO_EXPIRED_URL", 600)),
 		nil,
 	)
 	if err != nil {
