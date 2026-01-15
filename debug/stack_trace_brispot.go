@@ -22,34 +22,30 @@ func GetStackTraceOnDebug(pick ...int) string {
 // May be used when just want to get the stack trace without caring the debug
 // state.
 func GetStackTraceInString(pick ...int) string {
-	stack := make([]uintptr, 2<<6)      // 128
-	length := runtime.Callers(0, stack) // skip no frames
+	stack := make([]uintptr, 2<<6)
+	length := runtime.Callers(0, stack)
 
 	var pickAll bool
-	// set default to capture the first found line
 	if len(pick) < 1 {
 		pickAll = true
 	}
 
 	trackPicked := 1
-	var allStackTrace strings.Builder
+	var traces []string
 	for i := 0; i < length; i++ {
 		funcPtr := runtime.FuncForPC(stack[i])
 		file, line := funcPtr.FileLine(stack[i])
 		if strings.Contains(file, "/app/") {
+			s := fmt.Sprintf("[%s:%d]", file, line)
 
-			s := fmt.Sprintf("%s:%d\n", file, line)
-			// capture the matched pick
 			if !pickAll && trackPicked == pick[0] {
 				return s
 			}
 
-			allStackTrace.WriteString(s)
-
+			traces = append(traces, s)
 			trackPicked++
-
 		}
 	}
 
-	return allStackTrace.String()
+	return strings.Join(traces, " ")
 }
