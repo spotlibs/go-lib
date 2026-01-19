@@ -9,7 +9,7 @@ const (
 
 func ProduceSampleError(errs ...error) error {
 	var errMsg string
-	if len(errs) == 0 {
+	if len(errs) > 0 {
 		for _, err := range errs {
 			errMsg += err.Error() + "\n"
 		}

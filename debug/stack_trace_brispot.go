@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+
+	"github.com/spotlibs/go-lib/helper"
 )
 
 // GetStackTraceOnDebug return information from GetStackTraceInString if the
@@ -32,18 +34,20 @@ func GetStackTraceInString(pick ...int) string {
 
 	trackPicked := 1
 	var traces []string
+	seen := helper.NewStringSet()
 	for i := 0; i < length; i++ {
 		funcPtr := runtime.FuncForPC(stack[i])
 		file, line := funcPtr.FileLine(stack[i])
 		if strings.Contains(file, "/app/") {
 			s := fmt.Sprintf("[%s:%d]", file, line)
-
-			if !pickAll && trackPicked == pick[0] {
-				return s
+			if !seen.Exists(s) {
+				seen.Add(s)
+				if !pickAll && trackPicked == pick[0] {
+					return s
+				}
+				traces = append(traces, s)
+				trackPicked++
 			}
-
-			traces = append(traces, s)
-			trackPicked++
 		}
 	}
 
