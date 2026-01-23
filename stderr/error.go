@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/goravel/framework/facades"
 )
 
 // err standard object that hold any information about the error.
@@ -18,7 +20,10 @@ type err struct {
 // Error implement error interface.
 func (e err) Error() string {
 	// do trim space in case stacktrace empty so that there is no trailing empty space
-	return strings.TrimSpace(e.code + " " + e.msg + " " + e.stackTrc)
+	if facades.Config().GetBool("APP_DEBUG", false) {
+		return strings.TrimSpace(e.code + " " + e.msg + " " + e.stackTrc)
+	}
+	return strings.TrimSpace(e.code + " " + e.msg)
 }
 
 // Err set std error by given error code, message and any desired http code.
