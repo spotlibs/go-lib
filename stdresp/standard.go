@@ -2,6 +2,8 @@ package stdresp
 
 import (
 	"github.com/goravel/framework/contracts/http"
+	"github.com/spotlibs/go-lib/ctx"
+	"github.com/spotlibs/go-lib/log"
 	"github.com/spotlibs/go-lib/stderr"
 )
 
@@ -25,6 +27,17 @@ func Resp(c http.Context, code, desc string, opts ...StdOpt) http.Response {
 	for _, opt := range opts {
 		opt(&res)
 	}
+
+	// Auto Logging Error
+	if res.ResponseCode == stderr.ERROR_CODE_SYSTEM {
+		mt := ctx.Get(c) // Retrieve X-Request-Id
+		log.Runtime(c).Error(log.Map{
+			"code":      res.ResponseCode,
+			"message":   res.ResponseDesc,
+			"requestID": mt.ReqId,
+		})
+	}
+
 	return c.Response().Json(res.httpCode, res)
 }
 

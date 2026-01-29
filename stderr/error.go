@@ -30,7 +30,28 @@ func (e err) Error() string {
 //
 // Each value can be retrieved by helper func such as GetCode, GetMsg, GetMeta.
 func Err(code string, msg string, httpCode int) error {
-	return errWithDebug(code, msg, httpCode)
+	switch code {
+	case ERROR_CODE_ACCESS_PERMISSION:
+		return ErrPermission(msg)
+	case ERROR_CODE_DATA_NOT_FOUND:
+		return ErrDataNotFound()
+	case ERROR_CODE_INVALID_RULE:
+		return ErrInvRule(msg)
+	case ERROR_CODE_PARAMETER:
+		return ErrParam(msg)
+	case ERROR_CODE_WAITING_STATUS:
+		return ErrWaiting(msg)
+	case ERROR_CODE_THIRD_PARTY:
+		return ErrThirdParty(msg)
+	case ERROR_CODE_UNSUPPORTED:
+		return ErrUnsupported(msg)
+	case ERROR_CODE_INVALID_HEADER:
+		return ErrInvHeader(msg)
+	case ERROR_CODE_SYSTEM:
+		return ErrRuntime(msg)
+	default:
+		return ErrRuntime(msg)
+	}
 }
 
 // ErrValidation error in validation, it's not recommended to be used directly.
