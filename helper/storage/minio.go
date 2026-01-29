@@ -41,25 +41,25 @@ func ConfigureMinio(ctx context.Context, diskConfig string) *minioHelper {
 				"diskConfig": diskConfig,
 				"error":      err.Error(),
 			})
-			return &minioHelper{err: err}
+			return &minioHelper{err: err, ctx: ctx}
 		}
 		facades.Config().Add(diskConfig+".client", minioClient) // Cache the client for future use
-		return &minioHelper{minioClient: minioClient, bucketName: configMap["bucket_name"].(string)}
+		return &minioHelper{minioClient: minioClient, bucketName: configMap["bucket_name"].(string), ctx: ctx}
 	}
-	return &minioHelper{minioClient: minioClient, bucketName: configMap["bucket_name"].(string)}
+	return &minioHelper{minioClient: minioClient, bucketName: configMap["bucket_name"].(string), ctx: ctx}
 }
 
-func (h *minioHelper) Upload(ctx context.Context, file filesystem.File, dirpath string) error {
+func (h *minioHelper) Upload(file filesystem.File, dirpath string) error {
 	if h.err != nil {
 		return h.err
 	}
-	ctxSpotlibs := spotlibsCtx.Get(ctx)
+	ctxSpotlibs := spotlibsCtx.Get(h.ctx)
 	identifier := ctxSpotlibs.ReqId
 	if identifier == "" {
 		identifier = ctxSpotlibs.SignaturePath
 	}
 	info, err := h.minioClient.FPutObject(
-		ctx,
+		h.ctx,
 		h.bucketName,
 		dirpath+"/"+file.GetClientOriginalName(),
 		file.File(),
@@ -76,7 +76,7 @@ func (h *minioHelper) Upload(ctx context.Context, file filesystem.File, dirpath 
 	if err != nil {
 		return err
 	}
-	log.Runtime(ctx).Info(log.Map{
+	log.Runtime(h.ctx).Info(log.Map{
 		"message": "File uploaded to MinIO successfully",
 		"bucket":  info.Bucket,
 		"object":  info.Key,
@@ -84,12 +84,12 @@ func (h *minioHelper) Upload(ctx context.Context, file filesystem.File, dirpath 
 	})
 	return nil
 }
-func (h *minioHelper) Move(ctx context.Context, srcPath string, destPath string) error {
+func (h *minioHelper) Move(srcPath string, destPath string) error {
 	if h.err != nil {
 		return h.err
 	}
 	info, err := h.minioClient.CopyObject(
-		ctx,
+		h.ctx,
 		minio.CopyDestOptions{
 			Bucket: h.bucketName,
 			Object: destPath,
@@ -102,20 +102,20 @@ func (h *minioHelper) Move(ctx context.Context, srcPath string, destPath string)
 	if err != nil {
 		return err
 	}
-	log.Runtime(ctx).Info(log.Map{
+	log.Runtime(h.ctx).Info(log.Map{
 		"message":     "File moved in MinIO successfully",
 		"source":      srcPath,
 		"destination": destPath,
 		"etag":        info.ETag,
 	})
-	return h.Delete(ctx, srcPath)
+	return h.Delete(srcPath)
 }
-func (h *minioHelper) Copy(ctx context.Context, srcPath string, destPath string) error {
+func (h *minioHelper) Copy(srcPath string, destPath string) error {
 	if h.err != nil {
 		return h.err
 	}
 	info, err := h.minioClient.CopyObject(
-		ctx,
+		h.ctx,
 		minio.CopyDestOptions{
 			Bucket: h.bucketName,
 			Object: destPath,
@@ -128,7 +128,7 @@ func (h *minioHelper) Copy(ctx context.Context, srcPath string, destPath string)
 	if err != nil {
 		return err
 	}
-	log.Runtime(ctx).Info(log.Map{
+	log.Runtime(h.ctx).Info(log.Map{
 		"message":     "File copied in MinIO successfully",
 		"source":      srcPath,
 		"destination": destPath,
@@ -136,18 +136,18 @@ func (h *minioHelper) Copy(ctx context.Context, srcPath string, destPath string)
 	})
 	return nil
 }
-func (h *minioHelper) Delete(ctx context.Context, filepath string) error {
+func (h *minioHelper) Delete(filepath string) error {
 	if h.err != nil {
 		return h.err
 	}
 	err := h.minioClient.RemoveObject(
-		ctx,
+		h.ctx,
 		h.bucketName,
 		filepath,
 		minio.RemoveObjectOptions{},
 	)
 	if err != nil {
-		log.Runtime(ctx).Warning(log.Map{
+		log.Runtime(h.ctx).Warning(log.Map{
 			"message":  "Failed to delete file from MinIO",
 			"filepath": filepath,
 			"error":    err.Error(),
@@ -156,12 +156,12 @@ func (h *minioHelper) Delete(ctx context.Context, filepath string) error {
 	}
 	return nil
 }
-func (h *minioHelper) Securelink(ctx context.Context, filepath string) (string, error) {
+func (h *minioHelper) Securelink(filepath string) (string, error) {
 	if h.err != nil {
 		return "", h.err
 	}
 	link, err := h.minioClient.PresignedGetObject(
-		ctx,
+		h.ctx,
 		h.bucketName,
 		filepath,
 		time.Second*time.Duration(facades.Config().GetInt("MINIO_EXPIRED_URL", 600)),
@@ -172,6 +172,6 @@ func (h *minioHelper) Securelink(ctx context.Context, filepath string) (string, 
 	}
 	return link.String(), nil
 }
-func (h *minioHelper) SecurelinkFolder(ctx context.Context, dirpath string) (string, error) {
+func (h *minioHelper) SecurelinkFolder(dirpath string) (string, error) {
 	return "", nil
 }
