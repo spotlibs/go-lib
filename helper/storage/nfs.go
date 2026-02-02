@@ -17,10 +17,21 @@ func (h *nfsHelper) Upload(file filesystem.File, dirpath string) error {
 	}
 	info, err := os.Stat(dirpath)
 	if err != nil || !info.IsDir() {
-		err = os.MkdirAll(dirpath, 0664)
+		// create directory
+		err = exec.CommandContext(h.ctx, "mkdir", "-p", dirpath).Run()
 		if err != nil {
 			log.Runtime(h.ctx).Error(log.Map{
 				"message": "Failed to create directory for NFS upload",
+				"dirpath": dirpath,
+				"error":   err.Error(),
+			})
+			return err
+		}
+		// set permission
+		err = exec.CommandContext(h.ctx, "chmod", "-R", "664", dirpath).Run()
+		if err != nil {
+			log.Runtime(h.ctx).Error(log.Map{
+				"message": "Failed to set permission of directory for NFS upload",
 				"dirpath": dirpath,
 				"error":   err.Error(),
 			})
