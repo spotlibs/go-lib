@@ -17,24 +17,7 @@ func (h *nfsHelper) Upload(file filesystem.File, dirpath string) error {
 	}
 	info, err := os.Stat(dirpath)
 	if err != nil || !info.IsDir() {
-		// create directory
-		err = exec.CommandContext(h.ctx, "mkdir", "-p", dirpath).Run()
-		if err != nil {
-			log.Runtime(h.ctx).Error(log.Map{
-				"message": "Failed to create directory for NFS upload",
-				"dirpath": dirpath,
-				"error":   err.Error(),
-			})
-			return err
-		}
-		// set permission
-		err = exec.CommandContext(h.ctx, "chmod", "-R", "664", dirpath).Run()
-		if err != nil {
-			log.Runtime(h.ctx).Error(log.Map{
-				"message": "Failed to set permission of directory for NFS upload",
-				"dirpath": dirpath,
-				"error":   err.Error(),
-			})
+		if err := h.createDir(dirpath); err != nil {
 			return err
 		}
 	}
@@ -44,6 +27,7 @@ func (h *nfsHelper) Upload(file filesystem.File, dirpath string) error {
 	}
 	return nil
 }
+
 func (h *nfsHelper) Move(srcPath string, destPath string) error {
 	if h.err != nil {
 		return h.err
@@ -71,13 +55,7 @@ func (h *nfsHelper) Copy(srcPath string, destPath string) error {
 		dirpath := strings.Join(temp[0:len(temp)-1], "/")
 		info, err := os.Stat(dirpath)
 		if err != nil || !info.IsDir() {
-			err = os.MkdirAll(dirpath, 0664)
-			if err != nil {
-				log.Runtime(h.ctx).Error(log.Map{
-					"message": "Failed to create directory for NFS copy",
-					"dirpath": dirpath,
-					"error":   err.Error(),
-				})
+			if err := h.createDir(destPath); err != nil {
 				return err
 			}
 		}
@@ -181,4 +159,28 @@ func getFileExtension(filepath string) string {
 		return fileExtension
 	}
 	return "" // if only the file does not have any extension
+}
+
+func (h *nfsHelper) createDir(dirpath string) error {
+	// create directory
+	err := exec.CommandContext(h.ctx, "mkdir", "-p", dirpath).Run()
+	if err != nil {
+		log.Runtime(h.ctx).Error(log.Map{
+			"message": "Failed to create directory for NFS upload",
+			"dirpath": dirpath,
+			"error":   err.Error(),
+		})
+		return err
+	}
+	// set permission
+	err = exec.CommandContext(h.ctx, "chmod", "-R", "664", dirpath).Run()
+	if err != nil {
+		log.Runtime(h.ctx).Error(log.Map{
+			"message": "Failed to set permission of directory for NFS upload",
+			"dirpath": dirpath,
+			"error":   err.Error(),
+		})
+		return err
+	}
+	return nil
 }
