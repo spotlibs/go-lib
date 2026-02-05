@@ -173,7 +173,7 @@ func (h *nfsHelper) createDir(dirpath string) error {
 		return err
 	}
 	// set permission
-	err = exec.CommandContext(h.ctx, "chmod", "-R", "664", dirpath).Run()
+	err = exec.CommandContext(h.ctx, "chmod", "-R", "755", dirpath).Run()
 	if err != nil {
 		log.Runtime(h.ctx).Error(log.Map{
 			"message": "Failed to set permission of directory for NFS upload",
