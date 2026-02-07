@@ -28,7 +28,7 @@ func (h *nfsHelper) Upload(file filesystem.File, dirpath, filename string) error
 		return err
 	}
 	if filename == "" {
-		_, err = facades.Storage().Disk(h.driver).PutFileAs(dirpath, fl, fl.GetClientOriginalName())
+		_, err = facades.Storage().Disk(h.driver).PutFileAs(dirpath, fl, file.GetClientOriginalName())
 	} else {
 		_, err = facades.Storage().Disk(h.driver).PutFileAs(dirpath, fl, filename)
 	}
