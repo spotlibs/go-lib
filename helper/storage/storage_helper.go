@@ -11,8 +11,9 @@ import (
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 type nfsHelper struct {
-	err error
-	ctx context.Context
+	err    error
+	ctx    context.Context
+	driver string
 }
 type minioHelper struct {
 	err         error
@@ -21,7 +22,7 @@ type minioHelper struct {
 	ctx         context.Context
 }
 type StorageHelper interface {
-	Upload(file filesystem.File, dirpath string) error
+	Upload(file filesystem.File, dirpath, filename string) error
 	Move(srcPath string, destPath string) error
 	Copy(srcPath string, destPath string) error
 	Delete(filepath string) error
@@ -33,5 +34,5 @@ func Disk(ctx context.Context, diskConfig string) StorageHelper {
 	if strings.Contains(diskConfig, "minio") {
 		return ConfigureMinio(ctx, diskConfig)
 	}
-	return &nfsHelper{ctx: ctx}
+	return &nfsHelper{ctx: ctx, driver: diskConfig}
 }

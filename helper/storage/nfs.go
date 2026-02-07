@@ -8,10 +8,12 @@ import (
 	"strings"
 
 	"github.com/goravel/framework/contracts/filesystem"
+	"github.com/goravel/framework/facades"
+	fsFacade "github.com/goravel/framework/filesystem"
 	"github.com/spotlibs/go-lib/log"
 )
 
-func (h *nfsHelper) Upload(file filesystem.File, dirpath string) error {
+func (h *nfsHelper) Upload(file filesystem.File, dirpath, filename string) error {
 	if h.err != nil {
 		return h.err
 	}
@@ -21,7 +23,15 @@ func (h *nfsHelper) Upload(file filesystem.File, dirpath string) error {
 			return err
 		}
 	}
-	_, err = file.Store(dirpath)
+	fl, err := fsFacade.NewFile(file.File())
+	if err != nil {
+		return err
+	}
+	if filename == "" {
+		_, err = facades.Storage().Disk(h.driver).PutFileAs(dirpath, fl, fl.GetClientOriginalName())
+	} else {
+		_, err = facades.Storage().Disk(h.driver).PutFileAs(dirpath, fl, filename)
+	}
 	if err != nil {
 		return err
 	}

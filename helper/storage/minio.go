@@ -49,7 +49,7 @@ func ConfigureMinio(ctx context.Context, diskConfig string) *minioHelper {
 	return &minioHelper{minioClient: minioClient, bucketName: configMap["bucket_name"].(string), ctx: ctx}
 }
 
-func (h *minioHelper) Upload(file filesystem.File, dirpath string) error {
+func (h *minioHelper) Upload(file filesystem.File, dirpath, filename string) error {
 	if h.err != nil {
 		return h.err
 	}
@@ -58,14 +58,17 @@ func (h *minioHelper) Upload(file filesystem.File, dirpath string) error {
 	if identifier == "" {
 		identifier = ctxSpotlibs.SignaturePath
 	}
+	if filename == "" {
+		filename = file.GetClientOriginalName()
+	}
 	info, err := h.minioClient.FPutObject(
 		h.ctx,
 		h.bucketName,
-		dirpath+"/"+file.GetClientOriginalName(),
+		dirpath+"/"+filename,
 		file.File(),
 		minio.PutObjectOptions{
 			UserMetadata: map[string]string{
-				"original-filename": file.File(),
+				"original-filename": file.GetClientOriginalName(),
 				"uploader-user":     ctxSpotlibs.ReqUser,
 				"uploader-name":     ctxSpotlibs.ReqNama,
 				"identifier":        identifier,
