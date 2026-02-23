@@ -10,7 +10,7 @@ func TestErr(t *testing.T) {
 	err := stderr.Err("77", "oops", 200)
 
 	// assert the code
-	if stderr.GetCode(err) != "77" {
+	if stderr.GetCode(err) != "99" {
 		t.Errorf("expect %s, got %s", "77", stderr.GetCode(err))
 	}
 	// assert the message
@@ -25,7 +25,7 @@ func TestErr(t *testing.T) {
 
 func TestErr_Error(t *testing.T) {
 	err := stderr.Err("77", "oops", 200)
-	if err.Error() != "77 oops" {
+	if err.Error() != "99 oops" { // -> Map to ErrRuntime, for code except stdCode
 		t.Errorf("expect %s, got %s", "77 oops", err.Error())
 	}
 }

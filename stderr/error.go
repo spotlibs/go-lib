@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/goravel/framework/facades"
 )
 
 // err standard object that hold any information about the error.
@@ -18,14 +20,38 @@ type err struct {
 // Error implement error interface.
 func (e err) Error() string {
 	// do trim space in case stacktrace empty so that there is no trailing empty space
-	return strings.TrimSpace(e.code + " " + e.msg + " " + e.stackTrc)
+	if facades.Config().GetBool("APP_DEBUG", false) {
+		return strings.TrimSpace(e.code + " " + e.msg + " " + e.stackTrc)
+	}
+	return strings.TrimSpace(e.code + " " + e.msg)
 }
 
 // Err set std error by given error code, message and any desired http code.
 //
 // Each value can be retrieved by helper func such as GetCode, GetMsg, GetMeta.
 func Err(code string, msg string, httpCode int) error {
-	return errWithDebug(code, msg, httpCode)
+	switch code {
+	case ERROR_CODE_ACCESS_PERMISSION:
+		return ErrPermission(msg)
+	case ERROR_CODE_DATA_NOT_FOUND:
+		return ErrDataNotFound()
+	case ERROR_CODE_INVALID_RULE:
+		return ErrInvRule(msg)
+	case ERROR_CODE_PARAMETER:
+		return ErrParam(msg)
+	case ERROR_CODE_WAITING_STATUS:
+		return ErrWaiting(msg)
+	case ERROR_CODE_THIRD_PARTY:
+		return ErrThirdParty(msg)
+	case ERROR_CODE_UNSUPPORTED:
+		return ErrUnsupported(msg)
+	case ERROR_CODE_INVALID_HEADER:
+		return ErrInvHeader(msg)
+	case ERROR_CODE_SYSTEM:
+		return ErrRuntime(msg)
+	default:
+		return ErrRuntime(msg)
+	}
 }
 
 // ErrValidation error in validation, it's not recommended to be used directly.

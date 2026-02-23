@@ -85,15 +85,8 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 		requestBody, _ = io.ReadAll(req.Body)
 		req.Body.Close()
 
-		// Try to parse as JSON for readable logs
-		var jsonBody interface{}
-		if json.Unmarshal(requestBody, &jsonBody) == nil {
-			if jsonStr, err := json.Marshal(jsonBody); err == nil {
-				bodyDataLog = string(jsonStr)
-			} else {
-				bodyDataLog = string(requestBody)
-			}
-		} else {
+		// Parse as JSON, keep as object
+		if json.Unmarshal(requestBody, &bodyDataLog) != nil {
 			bodyDataLog = string(requestBody)
 		}
 
@@ -173,6 +166,12 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
+	// Parse response body as JSON object
+	var bodyResponseLog interface{}
+	if json.Unmarshal(resp.body, &bodyResponseLog) != nil {
+		bodyResponseLog = string(resp.body)
+	}
+
 	// Populate ClientExternalSurroundingLog
 	logData := ClientExternalSurroundingLog{
 		AppName: facades.Config().GetString("APP_NAME"),
@@ -187,7 +186,7 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 		Response: SurroundingLogResponse{
 			HttpCode: res.StatusCode,
 			Header:   res.Header,
-			Body:     string(resp.body),
+			Body:     bodyResponseLog,
 		},
 		ResponseTime: elapsed,
 		MemoryUsage:  m.Alloc,
@@ -199,21 +198,39 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 	)
 
 	// Check Client Debug -> Response
-	bodyResponse, ok := logData.Response.Body.(string)
-	if !ok {
-		logData.Response.Body = msgNotString
-	}
-	if len(bodyResponse) > 5000 && facades.Config().GetString("CLIENT_DEBUG", "false") == "false" {
-		logData.Response.Body = msgValidate
+	if facades.Config().GetString("CLIENT_DEBUG", "false") == "false" {
+		if bodyStr, ok := logData.Response.Body.(string); ok {
+			if len(bodyStr) > 5000 {
+				logData.Response.Body = msgValidate
+			}
+		} else {
+			// It's an object, check serialized length
+			if serialized, err := json.Marshal(logData.Response.Body); err == nil {
+				if len(serialized) > 5000 {
+					logData.Response.Body = msgValidate
+				}
+			} else {
+				logData.Response.Body = msgNotString
+			}
+		}
 	}
 
 	// Check Client Debug -> Request
-	bodyRequest, ok := logData.Request.Body.(string)
-	if !ok {
-		logData.Request.Body = msgNotString
-	}
-	if len(bodyRequest) > 5000 && facades.Config().GetString("CLIENT_DEBUG", "false") == "false" {
-		logData.Request.Body = msgValidate
+	if facades.Config().GetString("CLIENT_DEBUG", "false") == "false" {
+		if bodyStr, ok := logData.Request.Body.(string); ok {
+			if len(bodyStr) > 5000 {
+				logData.Request.Body = msgValidate
+			}
+		} else {
+			// It's an object, check serialized length
+			if serialized, err := json.Marshal(logData.Request.Body); err == nil {
+				if len(serialized) > 5000 {
+					logData.Request.Body = msgValidate
+				}
+			} else {
+				logData.Request.Body = msgNotString
+			}
+		}
 	}
 
 	// Record Surrounding Log
@@ -262,13 +279,13 @@ func getIdentifierPath(metadata ctx.Metadata) string {
 
 func (h *httpClientExternal) externalCallLog(logData ClientExternalSurroundingLog) log.Map {
 	return log.Map{
-		"app_name":      logData.AppName,
-		"path":          logData.Path,
-		"host":          logData.Host,
-		"url":           logData.Url,
-		"request":       logData.Request,
-		"response":      logData.Response,
-		"response_time": logData.ResponseTime.Milliseconds(),
-		"memory_usage":  logData.MemoryUsage,
+		"app_name":     logData.AppName,
+		"path":         logData.Path,
+		"host":         logData.Host,
+		"url":          logData.Url,
+		"request":      logData.Request,
+		"response":     logData.Response,
+		"responseTime": logData.ResponseTime.Milliseconds(),
+		"memoryUsage":  logData.MemoryUsage,
 	}
 }
