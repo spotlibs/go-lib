@@ -36,7 +36,14 @@ type httpClient struct {
 
 func (h *httpClient) Call(req *http.Request, timeouts ...time.Duration) (HTTPResponse, error) {
 	if !ctx.ShouldSkipContextHeaders(req.Context()) {
+		// Snapshot headers already set by caller
+		existingHeaders := req.Header.Clone()
+		// Auto-forward context headers
 		ctx.SetHTTPRequestHeader(req)
+		// Re-apply caller's headers so they take priority
+		for k, v := range existingHeaders {
+			req.Header[k] = v
+		}
 	}
 	reqTimeout := DEFAULT_TIMEOUT
 	if len(timeouts) > 0 {
