@@ -71,6 +71,12 @@ func (w *writer) Write(p []byte) (n int, err error) {
 	}
 	// grab only the payload
 	mm = m["payload"].(map[string]any)
+	mm["taskname"] = os.Getenv("TASK_NAME")
+	if hostname, err := os.Hostname(); err == nil {
+		mm["hostname"] = hostname
+	} else {
+		mm["hostname"] = "unknown. error: " + err.Error()
+	}
 
 	return w.wr.Write([]byte(formatMsg(t, strings.ToUpper(lvl), mm)))
 }
