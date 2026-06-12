@@ -30,6 +30,11 @@ func SetHTTPRequestHeader(r *http.Request) {
 	r.Header.Set("X-Forwarded-For", mt.ForwardedFor)
 	r.Header.Set("Cache-Control", mt.CacheControl)
 	r.Header.Set("User-Agent", mt.UserAgent)
+	r.Header.Set("X-Request-Uid-Las", mt.Uid)
+	r.Header.Set("X-Request-Uker-Commercial", mt.UkerCommercial)
+	r.Header.Set("X-Request-Uker-Commercial-Desc", mt.UkerCommsercialDesc)
+	r.Header.Set("X-Request-Floor-Commercial", mt.FloorCommercial)
+	r.Header.Set("X-Request-Floor-Commercial-Desc", mt.FloorCommercialDesc)
 }
 
 func WithSkipContextHeaders(ctx context.Context) context.Context {
