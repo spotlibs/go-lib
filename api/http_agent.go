@@ -2,11 +2,10 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/bytedance/sonic"
 )
 
 // DEFAULT_TIMEOUT the default timeout of team specification.
@@ -42,7 +41,7 @@ func (r *response) GetHeader(key string) string { return strings.Join(r.header[k
 // ToObject transform HTTPResponse.GetBody to any object using json encoding.
 func ToObject[T any](obj HTTPResponse) (T, error) {
 	var t T
-	return t, sonic.ConfigFastest.Unmarshal(obj.GetBody(), &t)
+	return t, json.Unmarshal(obj.GetBody(), &t)
 }
 
 type HTTPResponse interface {

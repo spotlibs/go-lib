@@ -2,12 +2,12 @@ package log
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	"github.com/bytedance/sonic"
 	"github.com/goravel/framework/facades"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -58,7 +58,7 @@ func (w *writer) Write(p []byte) (n int, err error) {
 	}
 	// format incoming message from zap then pass it to the real writer
 	var m, mm Map
-	_ = sonic.ConfigStd.Unmarshal(p, &m)
+	_ = json.Unmarshal(p, &m)
 	// try grab level from the payload of zap log message
 	var lvl string
 	if v, ok := m["level"]; ok {
@@ -156,8 +156,8 @@ func createOrOpenFile(logPath string) io.WriteCloser {
 
 // formatMsg format log message based on the level string and M as the payload.
 func formatMsg(t, lvl string, m Map) string {
-	payload, _ := sonic.ConfigStd.MarshalToString(m)
-	return fmt.Sprintf("[%s] ::%s.%s.%s:: %s\n", t, facades.Config().GetString("APP_NAME"), facades.Config().GetString("APP_ENV"), lvl, payload)
+	payload, _ := json.Marshal(m)
+	return fmt.Sprintf("[%s] ::%s.%s.%s:: %s\n", t, facades.Config().GetString("APP_NAME"), facades.Config().GetString("APP_ENV"), lvl, string(payload))
 }
 
 // getZapJsonEncoder return common setting for zap json encoder.

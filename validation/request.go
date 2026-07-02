@@ -1,7 +1,8 @@
 package validation
 
 import (
-	"github.com/bytedance/sonic"
+	"encoding/json"
+
 	httpValidate "github.com/goravel/framework/contracts/validation"
 	"github.com/goravel/framework/facades"
 	"github.com/goravel/framework/validation"
@@ -35,8 +36,8 @@ func ValidateRequest[T any](rules map[string]string, data map[string]any, obj *T
 		return stderr.ErrValidation(val.Errors().One(), errorMessages)
 	}
 
-	by, _ := sonic.ConfigFastest.Marshal(data)
-	_ = sonic.ConfigFastest.Unmarshal(by, obj)
+	by, _ := json.Marshal(data)
+	_ = json.Unmarshal(by, obj)
 
 	return nil
 }

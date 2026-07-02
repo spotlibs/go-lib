@@ -1,12 +1,12 @@
 package middleware
 
 import (
+	"encoding/json"
 	"mime/multipart"
 	"slices"
 	"strings"
 	"time"
 
-	"github.com/bytedance/sonic"
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 	"github.com/goravel/framework/filesystem"
@@ -79,7 +79,7 @@ func apiActivityRecorder(c http.Context, start time.Time) {
 // Otherwise, will return msgExceedLimit.
 func captureRequest(req map[string]any) any {
 	// transform to json to make it easy to check the size
-	b, _ := sonic.ConfigFastest.Marshal(req)
+	b, _ := json.Marshal(req)
 	if len(b) > msgSizeLimit {
 		return msgExceedLimit
 	}
@@ -91,7 +91,7 @@ func captureResponse(c http.Context) any {
 	// transform back response to an object before capturing
 	var res stdresp.Std
 	if v := c.Response().Origin().Body(); v != nil {
-		_ = sonic.ConfigFastest.Unmarshal(v.Bytes(), &res)
+		_ = json.Unmarshal(v.Bytes(), &res)
 
 		// replace data if its len more than the limit 5000
 		if len(v.Bytes()) > msgSizeLimit {
