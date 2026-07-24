@@ -3,7 +3,6 @@ package api_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -126,14 +125,14 @@ func TestSOAPClient_Call_WithParams(t *testing.T) {
 
 		w.Header().Set("Content-Type", "text/xml; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		response := fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+		response := `<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <updatePDWKResponse xmlns="http://tempuri.org/">
       <updatePDWKResult>{"statusCode":"01","statusDesc":"Success"}</updatePDWKResult>
     </updatePDWKResponse>
   </soap:Body>
-</soap:Envelope>`)
+</soap:Envelope>`
 		_, _ = w.Write([]byte(response))
 	}))
 	defer server.Close()

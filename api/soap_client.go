@@ -196,8 +196,7 @@ func (s *soapClient) Call(requestCtx context.Context, soapURL string, action str
 	runtime.ReadMemStats(&m)
 
 	// Response body for logging
-	var bodyResponseLog interface{}
-	bodyResponseLog = string(respBody)
+	var bodyResponseLog interface{} = string(respBody)
 
 	// Log surrounding
 	logData := SOAPSurroundingLog{
