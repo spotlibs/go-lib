@@ -151,16 +151,14 @@ func (c *ConsumerConfig) ToConfigMap() *kafka.ConfigMap {
 	}
 
 	cm := &kafka.ConfigMap{
-		"bootstrap.servers":  c.Brokers,
-		"sasl.username":      c.Username,
-		"sasl.password":      c.Password,
-		"sasl.mechanism":     saslMechanism,
-		"security.protocol":  securityProtocol,
-		"compression.codec":  compressionCodec,
-		"message.timeout.ms": messageTimeoutMs,
-		"socket.timeout.ms":  socketTimeoutMs,
-		"group.id":           c.GroupID,
-		"auto.offset.reset":  autoOffsetReset,
+		"bootstrap.servers": c.Brokers,
+		"sasl.username":     c.Username,
+		"sasl.password":     c.Password,
+		"sasl.mechanism":    saslMechanism,
+		"security.protocol": securityProtocol,
+		"socket.timeout.ms": socketTimeoutMs,
+		"group.id":          c.GroupID,
+		"auto.offset.reset": autoOffsetReset,
 	}
 
 	if c.ClientID != "" {
