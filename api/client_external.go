@@ -28,6 +28,7 @@ func NewHTTPClientExternal() HTTPClientExternal {
 	var trans http.Transport
 	trans.MaxConnsPerHost = 50
 	trans.MaxIdleConnsPerHost = 15
+	trans.Proxy = http.ProxyFromEnvironment
 	trans.MaxIdleConns = 50
 	trans.IdleConnTimeout = 10 * time.Second
 	trans.TLSClientConfig = &tls.Config{
