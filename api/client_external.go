@@ -193,7 +193,6 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 	}
 
 	const (
-		msgValidate  = "more than 5000 characters"
 		msgNotString = "not a string"
 	)
 
@@ -201,13 +200,13 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 	if facades.Config().GetString("CLIENT_DEBUG", "false") == "false" {
 		if bodyStr, ok := logData.Response.Body.(string); ok {
 			if len(bodyStr) > 5000 {
-				logData.Response.Body = msgValidate
+				logData.Response.Body = bodyStr[:5000] + "... (truncated, more than 5000 characters)"
 			}
 		} else {
 			// It's an object, check serialized length
 			if serialized, err := json.Marshal(logData.Response.Body); err == nil {
 				if len(serialized) > 5000 {
-					logData.Response.Body = msgValidate
+					logData.Response.Body = string(serialized[:5000]) + "... (truncated, more than 5000 characters)"
 				}
 			} else {
 				logData.Response.Body = msgNotString
@@ -219,13 +218,13 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 	if facades.Config().GetString("CLIENT_DEBUG", "false") == "false" {
 		if bodyStr, ok := logData.Request.Body.(string); ok {
 			if len(bodyStr) > 5000 {
-				logData.Request.Body = msgValidate
+				logData.Request.Body = bodyStr[:5000] + "... (truncated, more than 5000 characters)"
 			}
 		} else {
 			// It's an object, check serialized length
 			if serialized, err := json.Marshal(logData.Request.Body); err == nil {
 				if len(serialized) > 5000 {
-					logData.Request.Body = msgValidate
+					logData.Request.Body = string(serialized[:5000]) + "... (truncated, more than 5000 characters)"
 				}
 			} else {
 				logData.Request.Body = msgNotString
