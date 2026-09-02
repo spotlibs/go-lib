@@ -95,7 +95,7 @@ func captureResponse(c http.Context) any {
 
 		// replace data if its len more than the limit 5000
 		if len(v.Bytes()) > msgSizeLimit {
-			res.ResponseData = msgExceedLimit
+			res.ResponseData = v.String()[:msgSizeLimit] + "..." + msgExceedLimit
 			return res
 		}
 	}
