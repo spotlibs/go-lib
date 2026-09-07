@@ -42,8 +42,33 @@ func successGQLHandler(body string) http.HandlerFunc {
 // ---------------------------------------------------------------------------
 
 func TestNewGraphQLClient_NotNil(t *testing.T) {
-	client := api.NewGraphQLClient("https://api.example.com/graphql")
+	client := api.NewGraphQLClient()
 	assert.NotNil(t, client)
+}
+
+// ---------------------------------------------------------------------------
+// SetEndpoint
+// ---------------------------------------------------------------------------
+
+func TestGraphQLClient_SetEndpoint_Chainable(t *testing.T) {
+	client := api.NewGraphQLClient()
+	returned := client.SetEndpoint("http://example.com/graphql")
+	assert.Equal(t, client, returned, "SetEndpoint should return the same receiver")
+}
+
+func TestGraphQLClient_SetEndpoint_UsedForRequest(t *testing.T) {
+	srv := newGQLServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"data":{}}`))
+	})
+	defer srv.Close()
+
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
+
+	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.GetStatusCode())
 }
 
 // ---------------------------------------------------------------------------
@@ -59,7 +84,8 @@ func TestGraphQLClient_SetBasicAuth_SetsHeader(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	client.SetBasicAuth("user", "pass")
 
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
@@ -68,7 +94,7 @@ func TestGraphQLClient_SetBasicAuth_SetsHeader(t *testing.T) {
 }
 
 func TestGraphQLClient_SetBasicAuth_Chainable(t *testing.T) {
-	client := api.NewGraphQLClient("https://api.example.com/graphql")
+	client := api.NewGraphQLClient()
 	returned := client.SetBasicAuth("u", "p")
 	assert.Equal(t, client, returned, "SetBasicAuth should return the same receiver")
 }
@@ -86,7 +112,8 @@ func TestGraphQLClient_SetBearerToken_SetsHeader(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	client.SetBearerToken(token)
 
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
@@ -95,7 +122,7 @@ func TestGraphQLClient_SetBearerToken_SetsHeader(t *testing.T) {
 }
 
 func TestGraphQLClient_SetBearerToken_Chainable(t *testing.T) {
-	client := api.NewGraphQLClient("https://api.example.com/graphql")
+	client := api.NewGraphQLClient()
 	returned := client.SetBearerToken("tok")
 	assert.Equal(t, client, returned, "SetBearerToken should return the same receiver")
 }
@@ -115,7 +142,8 @@ func TestGraphQLClient_SetHeaders_MergesHeaders(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	client.SetHeaders(map[string]string{
 		"X-Foo":   "bar",
 		"X-Extra": "baz",
@@ -134,7 +162,8 @@ func TestGraphQLClient_SetHeaders_OverridesExistingKey(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	client.SetHeaders(map[string]string{"Content-Type": "text/plain"})
 
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
@@ -143,7 +172,7 @@ func TestGraphQLClient_SetHeaders_OverridesExistingKey(t *testing.T) {
 }
 
 func TestGraphQLClient_SetHeaders_Chainable(t *testing.T) {
-	client := api.NewGraphQLClient("https://api.example.com/graphql")
+	client := api.NewGraphQLClient()
 	returned := client.SetHeaders(map[string]string{"X-Test": "1"})
 	assert.Equal(t, client, returned, "SetHeaders should return the same receiver")
 }
@@ -173,7 +202,8 @@ func TestGraphQLClient_Query_SimpleQuery_Success(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ users { id name } }`, nil, nil)
 
 	require.NoError(t, err)
@@ -195,7 +225,8 @@ func TestGraphQLClient_Query_WithVariables_SendsVariables(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(
 		context.Background(),
 		`query GetUser($id: ID!) { user(id: $id) { id } }`,
@@ -218,7 +249,8 @@ func TestGraphQLClient_Query_WithOperationName_SendsOperationName(t *testing.T) 
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(
 		context.Background(),
 		`query GetUser { user { id } }`,
@@ -243,7 +275,8 @@ func TestGraphQLClient_Query_WithVariablesAndOperationName(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(
 		context.Background(),
 		`mutation CreateUser($name: String!) { createUser(name: $name) { id } }`,
@@ -268,7 +301,8 @@ func TestGraphQLClient_Query_DefaultHeadersPresent(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	_, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 	require.NoError(t, err)
 }
@@ -278,18 +312,15 @@ func TestGraphQLClient_Query_DefaultHeadersPresent(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestGraphQLClient_Query_ServerReturns500_ReturnsResponse(t *testing.T) {
-	srv := newGQLServer(t, successGQLHandler(`{"errors":[{"message":"internal"}]}`))
-	defer srv.Close()
-
-	// rewrite server to return 500
-	srv2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(`{"errors":[{"message":"internal"}]}`))
 	}))
-	defer srv2.Close()
+	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv2.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 
 	require.NoError(t, err)
@@ -304,7 +335,8 @@ func TestGraphQLClient_Query_ServerReturns404(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 
 	require.NoError(t, err)
@@ -317,7 +349,7 @@ func TestGraphQLClient_Query_ServerReturns404(t *testing.T) {
 
 func TestGraphQLClient_Query_ConnectionError(t *testing.T) {
 	// Use a port that refuses connections
-	client := api.NewGraphQLClient("http://localhost:19999")
+	client := api.NewGraphQLClient()
 	_, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 
 	require.Error(t, err)
@@ -325,7 +357,7 @@ func TestGraphQLClient_Query_ConnectionError(t *testing.T) {
 }
 
 func TestGraphQLClient_Query_InvalidURL(t *testing.T) {
-	client := api.NewGraphQLClient("://bad-url")
+	client := api.NewGraphQLClient()
 	_, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 
 	require.Error(t, err)
@@ -346,7 +378,8 @@ func TestGraphQLClient_Query_TimeoutReturnsError(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancel()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	_, err := client.Query(ctx, `{ ping }`, nil, nil)
 
 	require.Error(t, err)
@@ -365,7 +398,8 @@ func TestGraphQLClient_Query_AppDebugTrue_LogsWithoutError(t *testing.T) {
 	srv := newGQLServer(t, successGQLHandler(responsePayload))
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(
 		context.Background(),
 		`query GetProduct($id: ID!) { product(id: $id) { id } }`,
@@ -384,7 +418,8 @@ func TestGraphQLClient_Query_AppDebugFalse_NoLogEmitted(t *testing.T) {
 	srv := newGQLServer(t, successGQLHandler(`{"data":{}}`))
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 
 	require.NoError(t, err)
@@ -400,7 +435,8 @@ func TestGraphQLClient_Query_AppDebugTrue_LargeRequestBodyTruncated(t *testing.T
 	srv := newGQLServer(t, successGQLHandler(`{"data":{}}`))
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), bigQuery, nil, nil)
 
 	require.NoError(t, err)
@@ -419,7 +455,8 @@ func TestGraphQLClient_Query_AppDebugTrue_LargeResponseBodyTruncated(t *testing.
 	}))
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 
 	require.NoError(t, err)
@@ -440,7 +477,8 @@ func TestGraphQLClient_Query_AppDebugTrue_LargeResponseObjectTruncated(t *testin
 	}))
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 
 	require.NoError(t, err)
@@ -456,7 +494,8 @@ func TestGraphQLClient_Query_ResponseBodyParseable(t *testing.T) {
 	srv := newGQLServer(t, successGQLHandler(payload))
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ user { id name } }`, nil, nil)
 	require.NoError(t, err)
 
@@ -481,7 +520,8 @@ func TestGraphQLClient_Query_GetHeaderReturnsValue(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 	require.NoError(t, err)
 	assert.Equal(t, "abc-123", resp.GetHeader("X-Request-Id"))
@@ -495,7 +535,8 @@ func TestGraphQLClient_Query_GetHeadersReturnsMap(t *testing.T) {
 	})
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 	require.NoError(t, err)
 	headers := resp.GetHeaders()
@@ -514,7 +555,8 @@ func TestGraphQLClient_Query_NonJSONResponse_ReturnsBodyAsBytes(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ ping }`, nil, nil)
 
 	require.NoError(t, err)
@@ -529,7 +571,8 @@ func TestGraphQLClient_Query_ToObject(t *testing.T) {
 	srv := newGQLServer(t, successGQLHandler(`{"data":{"id":"5","label":"test"}}`))
 	defer srv.Close()
 
-	client := api.NewGraphQLClient(srv.URL)
+	client := api.NewGraphQLClient()
+	client.SetEndpoint(srv.URL)
 	resp, err := client.Query(context.Background(), `{ item { id label } }`, nil, nil)
 	require.NoError(t, err)
 
@@ -550,9 +593,8 @@ func TestGraphQLClient_Query_ToObject(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestGraphQLClient_Query_NilContext_ReturnsError(t *testing.T) {
-	client := api.NewGraphQLClient("http://localhost:19999")
+	client := api.NewGraphQLClient()
 	//nolint:staticcheck // intentional nil ctx to exercise error branch
 	_, err := client.Query(nil, `{ ping }`, nil, nil) //nolint:staticcheck
 	require.Error(t, err)
 }
-

@@ -47,7 +47,8 @@ type GraphQLLogDetail struct {
 //
 // Usage:
 //
-//	client := api.NewGraphQLClient("https://api.example.com/graphql")
+//	client := api.NewGraphQLClient()
+//	client.SetEndpoint("https://api.example.com/graphql")
 //	client.SetBearerToken("my-jwt")
 //	resp, err := client.Query(ctx, `{ users { id } }`, nil, nil)
 type GraphQLClient struct {
@@ -58,9 +59,10 @@ type GraphQLClient struct {
 	basicAuthPass string
 }
 
-// NewGraphQLClient returns a new GraphQLClient targeting endpoint.
+// NewGraphQLClient returns a new GraphQLClient with no endpoint set.
+// Call SetEndpoint before issuing queries.
 // Default timeout is 10 s, TLS verification is skipped (matching the PHP default).
-func NewGraphQLClient(endpoint string) *GraphQLClient {
+func NewGraphQLClient() *GraphQLClient {
 	var trans http.Transport
 	trans.MaxConnsPerHost = 50
 	trans.MaxIdleConnsPerHost = 15
@@ -75,13 +77,19 @@ func NewGraphQLClient(endpoint string) *GraphQLClient {
 	cl.Timeout = 10 * time.Second // PHP default timeout is 10 s
 
 	return &GraphQLClient{
-		cl:       &cl,
-		endpoint: endpoint,
+		cl: &cl,
 		headers: map[string]string{
 			"Content-Type": "application/json",
 			"Accept":       "application/json",
 		},
 	}
+}
+
+// SetEndpoint configure endpoint
+// Returns the receiver so calls can be chained.
+func (g *GraphQLClient) SetEndpoint(endpoint string) *GraphQLClient {
+	g.endpoint = endpoint
+	return g
 }
 
 // SetBasicAuth configures HTTP Basic authentication for every request.
