@@ -36,7 +36,6 @@ func NewHTTPClientExternal() HTTPClientExternal {
 
 	var client http.Client
 	client.Transport = &trans
-	client.Timeout = 60 * time.Second
 
 	return &httpClientExternal{cl: &client}
 }
