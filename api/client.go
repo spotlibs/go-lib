@@ -25,7 +25,6 @@ func NewHTTPClient() HTTPClient {
 
 	var client http.Client
 	client.Transport = &trans
-	client.Timeout = 30 * time.Second
 
 	return &httpClient{cl: &client}
 }
