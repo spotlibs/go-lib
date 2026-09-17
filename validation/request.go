@@ -9,7 +9,11 @@ import (
 
 // ValidateRequest validate request data with given rules.
 func ValidateRequest[T any](rules map[string]string, data map[string]any, obj *T) error {
-	val, err := facades.Validation().Make(data, rules, validation.Messages(validationMessages))
+	messagesCopy := make(map[string]string, len(validationMessages))
+	for k, v := range validationMessages {
+		messagesCopy[k] = v
+	}
+	val, err := facades.Validation().Make(data, rules, validation.Messages(messagesCopy))
 	if err != nil {
 		return stderr.ErrRuntime(err.Error())
 	}
