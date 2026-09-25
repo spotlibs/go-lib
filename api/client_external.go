@@ -290,3 +290,7 @@ func (h *httpClientExternal) externalCallLog(logData ClientExternalSurroundingLo
 		"memoryUsage":  logData.MemoryUsage,
 	}
 }
+
+func (h *httpClientExternal) SetClientTimeout(timeout time.Duration) {
+	h.cl.Timeout = timeout
+}

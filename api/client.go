@@ -61,3 +61,7 @@ func (h *httpClient) Call(req *http.Request, timeouts ...time.Duration) (HTTPRes
 
 	return &resp, nil
 }
+
+func (h *httpClient) SetClientTimeout(timeout time.Duration) {
+	h.cl.Timeout = timeout
+}

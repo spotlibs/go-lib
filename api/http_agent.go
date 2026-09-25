@@ -64,6 +64,8 @@ type HTTPClient interface {
 	// This function also help setting any necessary metadata for spotlibs using
 	// ctx pkg that also come from this lib.
 	Call(req *http.Request, timeouts ...time.Duration) (HTTPResponse, error)
+	// SetClientTimeout set the hard timeout of the underlying http.Client
+	SetClientTimeout(timeout time.Duration)
 }
 
 type HTTPClientExternal interface {
@@ -73,4 +75,6 @@ type HTTPClientExternal interface {
 	// This function also help setting any necessary metadata for spotlibs using
 	// ctx pkg that also come from this lib.
 	Call(requestClient context.Context, req *http.Request, timeouts ...time.Duration) (HTTPResponse, error)
+	// SetClientTimeout set the hard timeout of the underlying http.Client
+	SetClientTimeout(timeout time.Duration)
 }
