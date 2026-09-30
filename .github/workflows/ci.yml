@@ -16,7 +16,7 @@ jobs:
         run: mkdir -p storage/logs
 
       - name: Test
-        run: go test -v ./...
+        run: go test -tags musl -v ./...
 
   golangci:
     name: Run Linter
