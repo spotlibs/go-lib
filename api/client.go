@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
@@ -16,16 +17,22 @@ import (
 func NewHTTPClient() HTTPClient {
 	var trans http.Transport
 	trans.MaxConnsPerHost = 50
-	trans.MaxIdleConnsPerHost = 15
-	trans.MaxIdleConns = 50
-	trans.IdleConnTimeout = 10 * time.Second
+	trans.MaxIdleConnsPerHost = 10
+	trans.MaxIdleConns = 100
+	trans.IdleConnTimeout = 90 * time.Second
+	trans.DialContext = (&net.Dialer{
+		Timeout:   5 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}).DialContext
+	trans.TLSHandshakeTimeout = 5 * time.Second
+	trans.ResponseHeaderTimeout = 10 * time.Second
 	trans.TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: true,
 	}
 
 	var client http.Client
 	client.Transport = &trans
-	client.Timeout = 30 * time.Second
+	client.Timeout = 0
 
 	return &httpClient{cl: &client}
 }
