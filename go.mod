@@ -4,6 +4,7 @@ go 1.23.0
 
 require (
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.9.3
+	github.com/confluentinc/confluent-kafka-go/v2 v2.12.0
 	github.com/goravel/framework v1.14.9
 	github.com/minio/minio-go/v7 v7.0.95
 	github.com/redis/go-redis/v9 v9.7.3
@@ -42,7 +43,6 @@ require (
 	github.com/charmbracelet/x/ansi v0.6.0 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20241222104055-e1130b311607 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
-	github.com/confluentinc/confluent-kafka-go/v2 v2.12.0 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
