@@ -42,7 +42,9 @@ type Metadata struct {
 	UrlPath             string // UrlPath may contain the url path information coming from http request
 	SignaturePath       string // SignaturePath may contain the signature command from artisan commanda
 	Uid                 string
+	FidRole             string
 	UkerCommercial      string
+	UkerCommercialDesc  string
 	FloorCommercial     string
 	FloorCommercialDesc string
 }
@@ -85,6 +87,7 @@ func SetFromRequestHeader(c http.Context) {
 		UkerCommercial:      c.Request().Header("X-Request-Uker-Commercial"),
 		FloorCommercial:     c.Request().Header("X-Request-Floor-Commercial"),
 		FloorCommercialDesc: c.Request().Header("X-Request-Floor-Commercial-Desc"),
+		FidRole:             c.Request().Header("X-Request-Fid-Role"),
 	}
 	c.WithValue(contextKey, mt)
 }
