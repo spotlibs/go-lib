@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"slices"
 	"time"
+	"unicode/utf8"
 
 	"github.com/goravel/framework/facades"
 	"github.com/redis/go-redis/v9"
@@ -163,7 +164,16 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 	}
 
 	// Responses
-	resp.body, _ = io.ReadAll(bodyReader)
+	// Guard against oversized response bodies: read at most maxResponseBodySize+1 bytes.
+	// If the body exceeds the limit, reject immediately to prevent memory pressure on the pod.
+	limited, err := io.ReadAll(io.LimitReader(bodyReader, maxResponseBodySize+1))
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+	if int64(len(limited)) > maxResponseBodySize {
+		return nil, fmt.Errorf("response body exceeds maximum allowed size of %d bytes", maxResponseBodySize)
+	}
+	resp.body = limited
 	resp.statusCode = res.StatusCode
 	resp.header = make(map[string][]string)
 	resp.header = res.Header
@@ -173,10 +183,18 @@ func (h *httpClientExternal) Call(requestCtx context.Context, req *http.Request,
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	// Parse response body as JSON object
+	// Parse response body as JSON object.
+	// If JSON unmarshal fails, check if the raw bytes are valid UTF-8:
+	//   - valid UTF-8  → safe to log as string (plain text, XML, etc.)
+	//   - invalid UTF-8 → binary content (PDF, octet-stream, etc.) → log sentinel
+	// This is purely content-based and cannot be spoofed by a wrong Content-Type header.
 	var bodyResponseLog interface{}
 	if json.Unmarshal(resp.body, &bodyResponseLog) != nil {
-		bodyResponseLog = string(resp.body)
+		if utf8.Valid(resp.body) {
+			bodyResponseLog = string(resp.body)
+		} else {
+			bodyResponseLog = "(binary response)"
+		}
 	}
 
 	// Populate ClientExternalSurroundingLog
