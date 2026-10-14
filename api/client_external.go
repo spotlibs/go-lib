@@ -30,6 +30,7 @@ func NewHTTPClientExternal() HTTPClientExternal {
 	var trans http.Transport
 	trans.MaxConnsPerHost = 50
 	trans.MaxIdleConnsPerHost = 10
+	trans.Proxy = http.ProxyFromEnvironment // honors HTTP_PROXY, HTTPS_PROXY, NO_PROXY; direct when unset
 	trans.MaxIdleConns = 100
 	trans.IdleConnTimeout = 90 * time.Second
 	trans.DialContext = (&net.Dialer{
