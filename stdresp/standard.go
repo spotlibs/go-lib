@@ -52,3 +52,11 @@ func Success(c http.Context, opts ...StdOpt) http.Response {
 func Error(c http.Context, opts ...StdOpt) http.Response {
 	return Resp(c, stderr.ERROR_CODE_SYSTEM, stderr.ERROR_DESC_SYSTEM, opts...)
 }
+
+// Raw returns a raw binary response with the given HTTP status code, content
+// type, and data. Unlike Resp/Success/Error, this bypasses the standard JSON
+// envelope entirely — intended for binary pass-through responses such as PDF
+// files or other non-JSON payloads.
+func Raw(c http.Context, statusCode int, contentType string, data []byte) http.Response {
+	return c.Response().Data(statusCode, contentType, data)
+}

@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -304,4 +305,87 @@ func TestToObject_InvalidJSON(t *testing.T) {
 
 	_, err = api.ToObject[TestStruct](resp)
 	assert.Error(t, err)
+}
+
+func TestHTTPClientExternal_Call_ResponseSizeExceeded(t *testing.T) {
+	// Create a test server that returns an extremely large payload
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		// Generate a 20MB payload. This will easily trip the maxResponseBodySize limit
+		// (assuming your limit is standard, like 5MB or 10MB).
+		largePayload := bytes.Repeat([]byte("a"), 20*1024*1024)
+		_, err := w.Write(largePayload)
+		if err != nil {
+			return
+		}
+	}))
+	defer server.Close()
+
+	client := api.NewHTTPClientExternal()
+	req, err := http.NewRequest("GET", server.URL, nil)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	// Make call
+	_, err = client.Call(ctx, req)
+
+	// Assertions - we expect an error regarding the size limit
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "response body exceeds maximum allowed size")
+}
+
+func TestHTTPClientExternal_Call_ValidUTF8Fallback(t *testing.T) {
+	// Create a test server that returns valid UTF-8 but INVALID JSON (e.g., plain text or XML)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte("Ini adalah plain text biasa dengan emoji 😊, bukan JSON!"))
+		if err != nil {
+			return
+		}
+	}))
+	defer server.Close()
+
+	client := api.NewHTTPClientExternal()
+	req, err := http.NewRequest("GET", server.URL, nil)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	// Make call
+	resp, err := client.Call(ctx, req)
+
+	// Assertions - it should succeed and internally hit the utf8.Valid(resp.body) == true branch
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.GetStatusCode())
+	assert.Contains(t, string(resp.GetBody()), "Ini adalah plain text")
+}
+
+func TestHTTPClientExternal_Call_BinaryFallback(t *testing.T) {
+	// Create a test server that returns INVALID UTF-8 bytes (binary data)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.WriteHeader(http.StatusOK)
+		// Send raw bytes that are not valid UTF-8
+		_, err := w.Write([]byte{0xff, 0xfe, 0xfd, 0x00, 0x11})
+		if err != nil {
+			return
+		}
+	}))
+	defer server.Close()
+
+	client := api.NewHTTPClientExternal()
+	req, err := http.NewRequest("GET", server.URL, nil)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	// Make call
+	resp, err := client.Call(ctx, req)
+
+	// Assertions - it should succeed and internally hit the utf8.Valid(resp.body) == false branch
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.GetStatusCode())
+	assert.Equal(t, []byte{0xff, 0xfe, 0xfd, 0x00, 0x11}, resp.GetBody())
 }

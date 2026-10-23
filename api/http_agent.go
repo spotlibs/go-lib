@@ -11,6 +11,13 @@ import (
 // DEFAULT_TIMEOUT the default timeout of team specification.
 var DEFAULT_TIMEOUT = 10 * time.Second
 
+// maxResponseBodySize is the maximum number of bytes that ClientExternal will
+// read from an external response body. Responses exceeding this limit are
+// rejected immediately to protect the pod from memory exhaustion.
+// Currently set to 10 MB which comfortably covers all expected payloads
+// (e.g. signed PDF documents from Privy).
+const maxResponseBodySize int64 = 10 * 1024 * 1024 // 10 MB
+
 // response object that may be returned by Agent.
 type response struct {
 	statusCode int
