@@ -4,8 +4,11 @@ import (
 	"errors"
 	"testing"
 
+	goravelhttp "github.com/goravel/framework/contracts/http"
 	"github.com/spotlibs/go-lib/stdresp"
 	"github.com/stretchr/testify/assert"
+
+	stdcontext "context"
 )
 
 // Test helper to create a Std instance
@@ -517,5 +520,96 @@ func BenchmarkWithMaskedData_Complex(b *testing.B) {
 		std := newStd()
 		opt := stdresp.WithMaskedData(keys, data)
 		opt(std)
+	}
+}
+
+// Safe interfaces to completely avoid field name collisions
+type SafeGoravelContext interface{ goravelhttp.Context }
+type SafeContextResponse interface{ goravelhttp.ContextResponse }
+type SafeResponse interface{ goravelhttp.Response }
+
+// StubCtx acts as goravelhttp.Context
+type StubCtx struct {
+	SafeGoravelContext // Embedded safe wrapper
+	MockResponse       goravelhttp.ContextResponse
+}
+
+// Explicitly implement Context() so Go never thinks it's a field!
+func (m *StubCtx) Context() stdcontext.Context {
+	return stdcontext.Background()
+}
+
+// Explicitly implement Response() to return our next stub
+func (m *StubCtx) Response() goravelhttp.ContextResponse {
+	return m.MockResponse
+}
+
+// StubCtxResp acts as goravelhttp.ContextResponse
+type StubCtxResp struct {
+	SafeContextResponse
+	ExpectedResponse goravelhttp.Response
+
+	// Fields to capture what stdresp.Raw passes in
+	CapturedStatusCode  int
+	CapturedContentType string
+	CapturedData        []byte
+}
+
+func (m *StubCtxResp) Data(code int, contentType string, data []byte) goravelhttp.Response {
+	m.CapturedStatusCode = code
+	m.CapturedContentType = contentType
+	m.CapturedData = data
+	return m.ExpectedResponse
+}
+
+// StubFinalResp acts as goravelhttp.Response
+type StubFinalResp struct {
+	SafeResponse
+}
+
+// --- 2. The Actual Unit Test ---
+
+func TestRaw(t *testing.T) {
+	tests := []struct {
+		name        string
+		statusCode  int
+		contentType string
+		data        []byte
+	}{
+		{
+			name:        "returns raw PDF binary",
+			statusCode:  200,
+			contentType: "application/pdf",
+			data:        []byte("%PDF-1.4... dummy content ..."),
+		},
+		{
+			name:        "returns raw arbitrary stream",
+			statusCode:  201,
+			contentType: "application/octet-stream",
+			data:        []byte{0x01, 0x02, 0x03},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			// Initialize the chain from bottom to top
+			mockFinal := &StubFinalResp{}
+			mockCtxResp := &StubCtxResp{
+				ExpectedResponse: mockFinal,
+			}
+			mockCtx := &StubCtx{
+				MockResponse: mockCtxResp,
+			}
+
+			// Call the function
+			result := stdresp.Raw(mockCtx, tt.statusCode, tt.contentType, tt.data)
+
+			// Assertions
+			assert.Equal(t, mockFinal, result)
+			assert.Equal(t, tt.statusCode, mockCtxResp.CapturedStatusCode)
+			assert.Equal(t, tt.contentType, mockCtxResp.CapturedContentType)
+			assert.Equal(t, tt.data, mockCtxResp.CapturedData)
+		})
 	}
 }
