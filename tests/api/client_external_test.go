@@ -110,6 +110,20 @@ func TestHTTPClientExternal_Call_WithTimeout(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.GetStatusCode())
 }
 
+func TestHTTPClientExternal_Call_WaitsForHeadersWithinCustomTimeout(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(10*time.Second + 250*time.Millisecond)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+	resp, err := api.NewHTTPClientExternal().Call(context.Background(), req, 15*time.Second)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.GetStatusCode())
+}
+
 func TestHTTPClientExternal_Call_TimeoutError(t *testing.T) {
 	// Create very slow server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
