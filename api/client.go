@@ -25,7 +25,6 @@ func NewHTTPClient() HTTPClient {
 		KeepAlive: 30 * time.Second,
 	}).DialContext
 	trans.TLSHandshakeTimeout = 5 * time.Second
-	trans.ResponseHeaderTimeout = 10 * time.Second
 	trans.TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: true,
 	}
