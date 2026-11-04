@@ -78,6 +78,12 @@ func (w *writer) Write(p []byte) (n int, err error) {
 		mm["hostname"] = "unknown. error: " + err.Error()
 	}
 
+	if facades.Config().GetString("LOG_OUTPUT", "both") == "stdout" {
+		return fmt.Println(formatMsg(t, strings.ToUpper(lvl), mm))
+	} else if facades.Config().GetString("LOG_OUTPUT", "both") == "logfile" {
+		return w.wr.Write([]byte(formatMsg(t, strings.ToUpper(lvl), mm)))
+	}
+	fmt.Println(formatMsg(t, strings.ToUpper(lvl), mm))
 	return w.wr.Write([]byte(formatMsg(t, strings.ToUpper(lvl), mm)))
 }
 func (w *writer) Close() error { return w.wr.Close() }
