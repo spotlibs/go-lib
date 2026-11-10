@@ -49,3 +49,19 @@ func (e *ExcelFile) GetSheetIndex(name string) (int, error) {
 func (e *ExcelFile) GetSheetList() []string {
 	return e.f.GetSheetList()
 }
+
+// HasSheet reports whether a sheet with the given name exists in the workbook.
+func (e *ExcelFile) HasSheet(name string) bool {
+	idx, err := e.f.GetSheetIndex(name)
+	return err == nil && idx >= 0
+}
+
+// GetFirstSheet returns the name of the first sheet in workbook order.
+// Returns stderr.ErrNotFound if the workbook has no sheet.
+func (e *ExcelFile) GetFirstSheet() (string, error) {
+	sheets := e.f.GetSheetList()
+	if len(sheets) == 0 {
+		return "", stderr.ErrNotFound("workbook has no sheet")
+	}
+	return sheets[0], nil
+}

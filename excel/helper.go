@@ -1,6 +1,8 @@
 package excel
 
 import (
+	"errors"
+
 	"github.com/spotlibs/go-lib/stderr"
 	"github.com/xuri/excelize/v2"
 )
@@ -24,4 +26,14 @@ func CoordinatesToCellName(col, row int) (string, error) {
 		return "", stderr.ErrRuntime("invalid coordinates")
 	}
 	return name, nil
+}
+
+// readErr maps an excelize read error to a stderr error.
+// A missing sheet returns stderr.ErrNotFound; any other error returns stderr.ErrRuntime(msg).
+func readErr(err error, sheet, msg string) error {
+	var notExist excelize.ErrSheetNotExist
+	if errors.As(err, &notExist) {
+		return stderr.ErrNotFound("sheet not found: " + sheet)
+	}
+	return stderr.ErrRuntime(msg)
 }
