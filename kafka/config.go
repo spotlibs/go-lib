@@ -133,14 +133,6 @@ func (c *ConsumerConfig) ToConfigMap() *kafka.ConfigMap {
 	if saslMechanism == "" {
 		saslMechanism = "PLAIN"
 	}
-	compressionCodec := c.CompressionCodec
-	if compressionCodec == "" {
-		compressionCodec = "lz4"
-	}
-	messageTimeoutMs := c.MessageTimeoutMs
-	if messageTimeoutMs == 0 {
-		messageTimeoutMs = 10000
-	}
 	socketTimeoutMs := c.SocketTimeoutMs
 	if socketTimeoutMs == 0 {
 		socketTimeoutMs = 10000

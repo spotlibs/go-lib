@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -126,19 +125,3 @@ func (l *NopLogger) OnLog(level int, facility string, message string) {}
 // Ensure interface compliance at compile time.
 var _ Logger = (*defaultLogger)(nil)
 var _ Logger = (*NopLogger)(nil)
-
-// formatPartitions formats TopicPartition slice into a readable string.
-func formatPartitions(partitions []kafka.TopicPartition) string {
-	result := ""
-	for i, p := range partitions {
-		topic := ""
-		if p.Topic != nil {
-			topic = *p.Topic
-		}
-		if i > 0 {
-			result += ", "
-		}
-		result += fmt.Sprintf("%s[%d]@%v", topic, p.Partition, p.Offset)
-	}
-	return result
-}
